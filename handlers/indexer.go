@@ -19,8 +19,9 @@ var UserBalances = make(map[string]map[string]*model.DDecimal)
 var TokenHolders = make(map[string]map[string]*model.DDecimal)
 
 // 数据发送变化的用户,刷新数据库
-var UpdateUser = []*string
+var UpdateUsers = make(map[string]bool)
 
+var BlockNumber uint64 = 0
 
 var inscriptionNumber uint64 = 0
 
@@ -67,6 +68,7 @@ func Inscribe(trx *model.Transaction) error {
 	inscription.Timestamp = trx.Timestamp
 	inscription.ContentType = contentType
 	inscription.Content = content
+	BlockNumber = trx.Block
 
 	if err := handleProtocols(&inscription); err != nil {
 		logger.Info("error at ", inscription.Number)
@@ -249,7 +251,7 @@ func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[st
 	// update
 	userBalances[tick] = balance
 	tokenHolders[inscription.To] = balance
-	UpdateUser = append(UpdateUser, &inscription.To)
+	UpdateUsers[inscription.To] = true
 
 	if err != nil {
 		return 0, err
@@ -353,8 +355,8 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 	tokenHolders[inscription.From] = fromBalance
 	tokenHolders[inscription.To] = toBalance
 
-	UpdateUser = append(UpdateUser, &inscription.From)
-	UpdateUser = append(UpdateUser, &inscription.To)
+	UpdateUsers[inscription.From] = true
+	UpdateUsers[inscription.To] = true
 
 
 	if newHolder {

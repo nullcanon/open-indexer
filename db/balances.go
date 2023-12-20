@@ -11,9 +11,8 @@ import (
 // ticks address amount
 
 type UserBalances struct {
-	Id          int64 `gorm:"type:int(11) UNSIGNED AUTO_INCREMENT;primary_key" json:"id"`
-	Ticks		string `gorm:"column:ticks"`
-	Address		string `gorm:"column:address"`
+	Ticks		string `gorm:"column:ticks;primary_key"`
+	Address		string `gorm:"column:address;primary_key"`
 	Amount		string `gorm:"column:amount; default:'0'"`
 }
 
@@ -23,15 +22,20 @@ func (u UserBalances) CreateUserBalances(userinfo UserBalances) error {
 
 func (u UserBalances) Update(args map[string]interface{}) error {
 	var userinfo UserBalances
-	result := db.First(&userinfo, "self = ?", u.Self)
+	result := db.First(&userinfo, "ticks = ? and address = ?", u.Ticks, u.Address)
 
 	if result.Error == nil {
-		db.Model(&UserTable{}).Where("self = ?", u.Self).Update(args)
+		db.Model(&UserBalances{}).Where("ticks = ? and address = ?", u.Ticks, u.Address).Update(args)
 	}
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return u.CreateUser(u)
+		return u.CreateUserBalances(u)
 	} else {
 		return result.Error
 	}
+	return nil
+}
+
+func (u UserBalances) FetchUserBalances(userbalance *[]UserBalances) {
+	db.Find(&userbalance)
 }

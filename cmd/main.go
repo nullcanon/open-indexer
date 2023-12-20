@@ -9,8 +9,9 @@ import (
 	"open-indexer/plugin"
 	"open-indexer/structs"
 	"open-indexer/model"
-	// "open-indexer/config"
 	indexer "open-indexer"
+	"open-indexer/db"
+	"open-indexer/config"
 
 	
 )
@@ -27,18 +28,16 @@ func init() {
 	flag.Parse()
 }
 
-// TODO 数据库刷数据,刷数据的方式
-// TODO 数据库读取数据
-
 func main() {
 
-	// config.InitConfig()
+	config.InitConfig()
+	db.Setup()
 
-	// todo why some tx index in block is zero?
 	api := "https://aia-dataseed2.aiachain.org"
 	w := indexer.NewHttpBasedEthWatcher(context.Background(), api)
 
 	var logger = handlers.GetLogger()
+	loader.LoadDataBase()
 
 	logger.Info("start index")
 	// we use BlockPlugin here
@@ -71,14 +70,26 @@ func main() {
 				logger.Fatalf("process error, %s", err)
 			}
 		}
+
+		loader.DumpTickerInfoToDB(handlers.BlockNumber, handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
+
 	}))
 
 	w.RunTillExitFromBlock(25338054)
 
 
-	logger.Info("successed")
+
+	// trxs, err := loader.LoadTransactionData(inputfile)
+	// if err != nil {
+	// 	logger.Fatalf("invalid input, %s", err)
+	// }
+
+	// err = handlers.ProcessUpdateARC20(trxs)
+	// if err != nil {
+	// 	logger.Fatalf("process error, %s", err)
+	// }
 
 	// print
-	loader.DumpTickerInfoMap(outputfile, handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
+	// loader.DumpTickerInfoMap(outputfile, handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
 
 }

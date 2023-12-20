@@ -1,15 +1,20 @@
 // 转账记录表
 // ticks status from to amount time hash
+package db
 
+import (
+	"errors"
+
+	"github.com/jinzhu/gorm"
+)
 
 
 type TradeHistory struct {
-	Id          int64 `gorm:"type:int(11) UNSIGNED AUTO_INCREMENT;primary_key" json:"id"`
 	Ticks		string `gorm:"column:ticks"`
 	Status		string `gorm:"column:status"`
 	From		string `gorm:"column:from"`
 	To			string `gorm:"column:to"`
-	Hash		string `gorm:"column:hash"`
+	Hash		string `gorm:"column:hash;primary_key"`
 	Time		int64 `gorm:"column:time"`
 }
 
@@ -20,10 +25,10 @@ func (u TradeHistory) CreateTradeHistory(tradeHistory TradeHistory) error {
 
 func (u TradeHistory) Update(args map[string]interface{}) error {
 	var tradeHistory TradeHistory
-	result := db.First(&tradeHistory, "self = ?", u.Self)
+	result := db.First(&tradeHistory, "hash = ?", u.Hash)
 
 	if result.Error == nil {
-		db.Model(&TradeHistory{}).Where("self = ?", u.Self).Update(args)
+		db.Model(&TradeHistory{}).Where("hash = ?", u.Hash).Update(args)
 	}
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -31,4 +36,5 @@ func (u TradeHistory) Update(args map[string]interface{}) error {
 	} else {
 		return result.Error
 	}
+	return nil
 }

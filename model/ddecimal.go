@@ -19,6 +19,13 @@ func NewDecimalFromString(s string) (*DDecimal, int, error) {
 	return &DDecimal{d}, p, e
 }
 
+func NewDecimalFromStringValue(s string) (*DDecimal) {
+	d, _, _ := decimal.NewFromString(s)
+
+	return &DDecimal{d}
+}
+
+
 func (dd *DDecimal) Add(other *DDecimal) *DDecimal {
 	d := dd.value.Add(other.value)
 	return &DDecimal{d}

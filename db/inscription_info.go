@@ -11,12 +11,11 @@ import (
 // avas trxs: 21002, total: 21000000, minted: 21000000, holders: 443
 
 type InscriptionInfo struct {
-	Id          int64 `gorm:"type:int(11) UNSIGNED AUTO_INCREMENT;primary_key" json:"id"`
-	Trxs		int64 `gorm:"column:trxs"`
-	Total		int64 `gorm:"column:total"`
-	Minted		int64 `gorm:"column:minted"`
-	Holders		int64 `gorm:"column:holders"`
-	Ticks		string `gorm:"column:ticks"`
+	Trxs		int32 `gorm:"column:trxs"`
+	Total		string `gorm:"column:total; default:'0'"`
+	Minted		string `gorm:"column:minted"`
+	Holders		int32 `gorm:"column:holders"`
+	Ticks		string `gorm:"column:ticks;primary_key"`
 }
 
 
@@ -26,10 +25,10 @@ func (u InscriptionInfo) CreateInscriptionInfo(inscriptionInfo InscriptionInfo) 
 
 func (u InscriptionInfo) Update(args map[string]interface{}) error {
 	var inscriptionInfo InscriptionInfo
-	result := db.First(&inscriptionInfo, "self = ?", u.Self)
+	result := db.First(&inscriptionInfo, "ticks = ?", u.Ticks)
 
 	if result.Error == nil {
-		db.Model(&InscriptionInfo{}).Where("self = ?", u.Self).Update(args)
+		result = db.Model(&InscriptionInfo{}).Where("ticks = ?", u.Ticks).Update(args)
 	}
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -37,4 +36,10 @@ func (u InscriptionInfo) Update(args map[string]interface{}) error {
 	} else {
 		return result.Error
 	}
+	return nil
+}
+
+
+func (u InscriptionInfo) FetchInscriptionInfo(inscriptionInfo *[]InscriptionInfo) {
+	db.Find(&inscriptionInfo)
 }

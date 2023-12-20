@@ -20,7 +20,7 @@ func (b BlockScan) Create(blockScan BlockScan) error {
 }
 func (b *BlockScan) GetNumber() int64 {
 	var bscScan BlockScan
-	err := db.Where("scan_type = ?", scantype).Order("id desc").First(&bscScan).Error
+	err := db.Order("id desc").First(&bscScan).Error
 	if err != nil {
 		return 0
 	}
@@ -31,12 +31,12 @@ func (b *BlockScan) Edit(data map[string]interface{}) error {
 	return db.Model(&b).Updates(data).Error
 }
 
-func (b *BlockScan) UptadeBlockNumber() error {
-	var block BlockScan
-	result := db.First(&block, "scan_type = ?", block.ScanType)
+func (b *BlockScan) UptadeBlockNumber(blockNumber uint64) error {
+	var blockscan BlockScan
+	result := db.First(&blockscan, "id = ?", 1)
 
 	if result.Error == nil {
-		db.Model(&BlockScan{}).Update(map[string]interface{}{"block_number": b.BlockNumber})
+		db.Model(&BlockScan{}).Where("id = ?", 1).Update(map[string]interface{}{"block_number": blockNumber})
 	}
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {

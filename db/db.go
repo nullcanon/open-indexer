@@ -1,11 +1,11 @@
 package db
 
 import (
-	"database/sql/driver"
+	// "database/sql/driver"
 	"fmt"
 	"log"
-	"time"
-
+	// "time"
+	"open-indexer/config"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
@@ -19,27 +19,20 @@ const (
 
 func Setup() {
 	var err error
-	// config.Global.MysqlInfo.User,
-	// config.Global.MysqlInfo.Password,
-	// config.Global.MysqlInfo.Host,
-	// config.Global.MysqlInfo.Db
 
-	user : = ""
-	password : = ""
-	host : = ""
-	db_name : = ""
+
 	db, err = gorm.Open(sqlType, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
-		user,
-		password,
-		host,
-		db_nameb))
+		config.Global.MysqlInfo.User,
+		config.Global.MysqlInfo.Password,
+		config.Global.MysqlInfo.Host,
+		config.Global.MysqlInfo.Db))
 
 	if err != nil {
 		log.Printf(fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
-			user,
-			password,
-			host,
-			db_nameb))
+			config.Global.MysqlInfo.User,
+			config.Global.MysqlInfo.Password,
+			config.Global.MysqlInfo.Host,
+			config.Global.MysqlInfo.Db))
 		log.Fatalf("models.Setup  err: %v", err)
 	}
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
