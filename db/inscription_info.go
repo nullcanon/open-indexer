@@ -6,18 +6,17 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-
 // 资产信息表
 // avas trxs: 21002, total: 21000000, minted: 21000000, holders: 443
 
 type InscriptionInfo struct {
-	Trxs		int32 `gorm:"column:trxs"`
-	Total		string `gorm:"column:total; default:'0'"`
-	Minted		string `gorm:"column:minted"`
-	Holders		int32 `gorm:"column:holders"`
-	Ticks		string `gorm:"column:ticks;primary_key"`
+	Trxs    int32  `gorm:"column:trxs"`
+	Total   string `gorm:"column:total; default:'0'"`
+	Minted  string `gorm:"column:minted"`
+	Holders int32  `gorm:"column:holders"`
+	Limit   string `gorm:"column:limit"`
+	Ticks   string `gorm:"column:ticks;primary_key"`
 }
-
 
 func (u InscriptionInfo) CreateInscriptionInfo(inscriptionInfo InscriptionInfo) error {
 	return db.Create(&inscriptionInfo).Error
@@ -36,9 +35,7 @@ func (u InscriptionInfo) Update(args map[string]interface{}) error {
 	} else {
 		return result.Error
 	}
-	return nil
 }
-
 
 func (u InscriptionInfo) FetchInscriptionInfo(inscriptionInfo *[]InscriptionInfo) {
 	db.Find(&inscriptionInfo)

@@ -1,19 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
+	indexer "open-indexer"
+	"open-indexer/config"
+	"open-indexer/db"
 	"open-indexer/handlers"
 	"open-indexer/loader"
-	"context"
-	"fmt"
+	"open-indexer/model"
 	"open-indexer/plugin"
 	"open-indexer/structs"
-	"open-indexer/model"
-	indexer "open-indexer"
-	"open-indexer/db"
-	"open-indexer/config"
-
-	
 )
 
 var (
@@ -48,11 +46,11 @@ func main() {
 		} else {
 			var trxs []*model.Transaction
 
-			fmt.Println("Adding >>", block.Hash(), block.Number())
+			// fmt.Println("Adding >>", block.Hash(), block.Number())
 
 			for i := 0; i < len(block.GetTransactions()); i++ {
 				tx := block.GetTransactions()[i]
-				fmt.Println("Adding >>", tx.GetHash(), tx.GetIndex(),tx.GetIndex(),tx.GetInput())
+				// fmt.Println("Adding >>", tx.GetHash(), tx.GetIndex(), tx.GetIndex(), tx.GetInput())
 
 				var data model.Transaction
 
@@ -77,8 +75,6 @@ func main() {
 	}))
 
 	w.RunTillExitFromBlock(blockNumber)
-
-
 
 	// trxs, err := loader.LoadTransactionData(inputfile)
 	// if err != nil {
