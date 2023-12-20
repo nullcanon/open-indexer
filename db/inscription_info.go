@@ -14,7 +14,7 @@ type InscriptionInfo struct {
 	Total   string `gorm:"column:total; default:'0'"`
 	Minted  string `gorm:"column:minted"`
 	Holders int32  `gorm:"column:holders"`
-	Limit   string `gorm:"column:limit"`
+	Limit   string `gorm:"column:mint_limit"`
 	Ticks   string `gorm:"column:ticks;primary_key"`
 }
 

@@ -31,14 +31,14 @@ func main() {
 	config.InitConfig()
 	db.Setup()
 	blockscan := db.BlockScan{}
-	blockNumber := uint64(blockscan.GetNumber())
+	blockNumber := uint64(blockscan.GetNumber()) + 1
 	api := "https://aia-dataseed2.aiachain.org"
 	w := indexer.NewHttpBasedEthWatcher(context.Background(), api)
 
 	var logger = handlers.GetLogger()
 	loader.LoadDataBase()
 
-	logger.Info("start index")
+	logger.Info("start index ", blockNumber)
 	// we use BlockPlugin here
 	w.RegisterBlockPlugin(plugin.NewSimpleBlockPlugin(func(block *structs.RemovableBlock) {
 		if block.IsRemoved {
@@ -70,7 +70,8 @@ func main() {
 			}
 		}
 		loader.DumpTradeCache()
-		loader.DumpTickerInfoToDB(handlers.BlockNumber, handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
+		loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
+		loader.DumpBlockNumber(block.Number())
 
 	}))
 

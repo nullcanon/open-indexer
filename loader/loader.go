@@ -17,12 +17,12 @@ func DumpTradeCache() {
 	for _, trade := range handlers.TradeCache {
 		trade.Update(
 			map[string]interface{}{
-				"ticks":  trade.Ticks,
-				"status": trade.Status,
-				"from":   trade.From,
-				"to":     trade.To,
-				"hash":   trade.Hash,
-				"time":   trade.Time,
+				"ticks":        trade.Ticks,
+				"status":       trade.Status,
+				"from_address": trade.From,
+				"to_address":   trade.To,
+				"hash":         trade.Hash,
+				"time":         trade.Time,
 			})
 	}
 	handlers.TradeCache = handlers.TradeCache[:0]
@@ -42,7 +42,7 @@ func LoadDataBase() {
 			Max:     model.NewDecimalFromStringValue(tokens.Total),
 			Limit:   model.NewDecimalFromStringValue(tokens.Limit),
 		}
-		handlers.GetLogger().Info(tokens.Ticks, tokens.Trxs, tokens.Minted, tokens.Holders, tokens.Total)
+		// handlers.GetLogger().Info(tokens.Ticks, tokens.Trxs, tokens.Minted, tokens.Holders, tokens.Total)
 	}
 
 	var userBalances []db.UserBalances
@@ -127,7 +127,6 @@ func LoadTransactionData(fname string) ([]*model.Transaction, error) {
 }
 
 func DumpTickerInfoToDB(
-	blockNumbers uint64,
 	tokens map[string]*model.Token,
 	userBalances map[string]map[string]*model.DDecimal,
 	tokenHolders map[string]map[string]*model.DDecimal,
@@ -151,18 +150,18 @@ func DumpTickerInfoToDB(
 		}
 		inscriptionInfo.Update(
 			map[string]interface{}{
-				"trxs":    info.Trxs,
-				"total":   info.Max.String(),
-				"minted":  info.Minted.String(),
-				"holders": len(tokenHolders[ticker]),
-				"limit":   info.Limit.String(),
+				"trxs":       info.Trxs,
+				"total":      info.Max.String(),
+				"minted":     info.Minted.String(),
+				"holders":    len(tokenHolders[ticker]),
+				"mint_limit": info.Limit.String(),
 			})
 
-		handlers.GetLogger().Info("Update inscriptionInfo secuess")
-		handlers.GetLogger().Info("trxs:", info.Trxs,
-			" total:", info.Max.String(),
-			" minted:", info.Minted.String(),
-			" holders:", len(tokenHolders[ticker]))
+		// handlers.GetLogger().Info("Update inscriptionInfo secuess")
+		// handlers.GetLogger().Info("trxs:", info.Trxs,
+		// 	" total:", info.Max.String(),
+		// 	" minted:", info.Minted.String(),
+		// 	" holders:", len(tokenHolders[ticker]))
 
 		// holders
 		for holder, needUpdate := range handlers.UpdateUsers {
@@ -179,14 +178,17 @@ func DumpTickerInfoToDB(
 				map[string]interface{}{
 					"amount": balance.String(),
 				})
-			handlers.GetLogger().Info(ticker, holder)
-			handlers.GetLogger().Info("Update balance secuess:", holder, " amount: ", balance.String())
+			// handlers.GetLogger().Info(ticker, holder)
+			// handlers.GetLogger().Info("Update balance secuess:", holder, " amount: ", balance.String())
 			handlers.UpdateUsers[holder] = false
 		}
 	}
 
+}
+
+func DumpBlockNumber(blockNumber uint64) {
 	blocnscan := db.BlockScan{}
-	blocnscan.UptadeBlockNumber(blockNumbers)
+	blocnscan.UptadeBlockNumber(blockNumber)
 }
 
 func DumpTickerInfoMap(fname string,

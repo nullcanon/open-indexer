@@ -8,16 +8,14 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-
 type TradeHistory struct {
-	Ticks		string `gorm:"column:ticks"`
-	Status		string `gorm:"column:status"`
-	From		string `gorm:"column:from"`
-	To			string `gorm:"column:to"`
-	Hash		string `gorm:"column:hash;primary_key"`
-	Time		uint64 `gorm:"column:time"`
+	Ticks  string `gorm:"column:ticks"`
+	Status string `gorm:"column:status"`
+	From   string `gorm:"column:from_address"`
+	To     string `gorm:"column:to_address"`
+	Hash   string `gorm:"column:hash;primary_key"`
+	Time   uint64 `gorm:"column:time"`
 }
-
 
 func (u TradeHistory) CreateTradeHistory(tradeHistory TradeHistory) error {
 	return db.Create(&tradeHistory).Error

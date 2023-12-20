@@ -97,7 +97,6 @@ func Inscribe(trx *model.Transaction) error {
 }
 
 func handleProtocols(inscription *model.Inscription) error {
-	logger.Info("handleProtocols", inscription.Id)
 	content := strings.TrimSpace(inscription.Content)
 	if content[0] == '{' {
 		var protoData map[string]string
@@ -144,7 +143,7 @@ func handleProtocols(inscription *model.Inscription) error {
 }
 
 func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
-	logger.Info("deployToken", inscription.Id)
+	logger.Info("deployToken ", inscription.Id)
 
 	value, ok := params["max"]
 	if !ok {
@@ -201,7 +200,7 @@ func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[
 }
 
 func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
-	logger.Info("mintToken", inscription.Id)
+	logger.Info("mintToken ", inscription.Id)
 
 	appendTradeCache(inscription, asc20.Tick)
 	value, ok := params["amt"]
@@ -369,6 +368,7 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 	if toBalance.Sign() == 0 {
 		newHolder = true
 	}
+	toBalance = toBalance.Add(amt)
 
 	// update
 	fromBalances[tick] = fromBalance
