@@ -32,7 +32,8 @@ func main() {
 	db.Setup()
 	blockscan := db.BlockScan{}
 	blockNumber := uint64(blockscan.GetNumber()) + 1
-	api := "https://aia-dataseed2.aiachain.org"
+	// api := "https://aia-dataseed2.aiachain.org"
+	api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d887b"
 	w := indexer.NewHttpBasedEthWatcher(context.Background(), api)
 
 	var logger = handlers.GetLogger()

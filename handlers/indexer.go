@@ -107,7 +107,8 @@ func handleProtocols(inscription *model.Inscription) error {
 			value, ok := protoData["p"]
 			if ok && strings.TrimSpace(value) != "" {
 				protocol := strings.ToLower(value)
-				if protocol == "aiarc-20" {
+				if protocol == "asc-20" {
+					// if protocol == "aiarc-20" {
 					var asc20 model.Asc20
 					asc20.Number = inscription.Number
 					if value, ok = protoData["tick"]; ok {
@@ -143,7 +144,7 @@ func handleProtocols(inscription *model.Inscription) error {
 }
 
 func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
-	logger.Info("deployToken ", inscription.Id)
+	logger.Info("deployToken ", inscription.Id, " tick: ", asc20.Tick)
 
 	value, ok := params["max"]
 	if !ok {
@@ -200,7 +201,7 @@ func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[
 }
 
 func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
-	logger.Info("mintToken ", inscription.Id)
+	logger.Info("mintToken ", inscription.Id, " tick: ", asc20.Tick)
 
 	appendTradeCache(inscription, asc20.Tick)
 	value, ok := params["amt"]

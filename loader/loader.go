@@ -35,12 +35,14 @@ func LoadDataBase() {
 
 	for _, tokens := range insInfos {
 		handlers.Tokens[tokens.Ticks] = &model.Token{
-			Trxs:    tokens.Trxs,
-			Tick:    tokens.Ticks,
-			Minted:  model.NewDecimalFromStringValue(tokens.Minted),
-			Holders: tokens.Holders,
-			Max:     model.NewDecimalFromStringValue(tokens.Total),
-			Limit:   model.NewDecimalFromStringValue(tokens.Limit),
+			Trxs:        tokens.Trxs,
+			Tick:        tokens.Ticks,
+			Minted:      model.NewDecimalFromStringValue(tokens.Minted),
+			Holders:     tokens.Holders,
+			Max:         model.NewDecimalFromStringValue(tokens.Total),
+			Limit:       model.NewDecimalFromStringValue(tokens.Limit),
+			CreatedAt:   tokens.CreatedAt,
+			CompletedAt: int64(tokens.CompletedAt),
 		}
 		// handlers.GetLogger().Info(tokens.Ticks, tokens.Trxs, tokens.Minted, tokens.Holders, tokens.Total)
 	}
@@ -150,11 +152,13 @@ func DumpTickerInfoToDB(
 		}
 		inscriptionInfo.Update(
 			map[string]interface{}{
-				"trxs":       info.Trxs,
-				"total":      info.Max.String(),
-				"minted":     info.Minted.String(),
-				"holders":    len(tokenHolders[ticker]),
-				"mint_limit": info.Limit.String(),
+				"trxs":         info.Trxs,
+				"total":        info.Max.String(),
+				"minted":       info.Minted.String(),
+				"holders":      len(tokenHolders[ticker]),
+				"mint_limit":   info.Limit.String(),
+				"created_at":   info.CreatedAt,
+				"completed_at": info.CompletedAt,
 			})
 
 		// handlers.GetLogger().Info("Update inscriptionInfo secuess")
