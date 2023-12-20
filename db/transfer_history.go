@@ -15,7 +15,7 @@ type TradeHistory struct {
 	From		string `gorm:"column:from"`
 	To			string `gorm:"column:to"`
 	Hash		string `gorm:"column:hash;primary_key"`
-	Time		int64 `gorm:"column:time"`
+	Time		uint64 `gorm:"column:time"`
 }
 
 

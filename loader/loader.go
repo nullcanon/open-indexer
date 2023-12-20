@@ -14,6 +14,23 @@ import (
 )
 
 
+func DumpTradeCache() {
+	for _, trade := range handlers.TradeCache {
+		trade.Update(
+			map[string]interface{}{
+				"ticks": trade.Ticks,
+				"status": trade.Status,
+				"from": trade.From,
+				"to": trade.To,
+				"hash": trade.Hash,
+				"time": trade.Time,
+
+			})
+	}
+	handlers.TradeCache = handlers.TradeCache[:0]
+}
+
+
 func LoadDataBase() {
 	var insInfos []db.InscriptionInfo
 	ins := db.InscriptionInfo{}

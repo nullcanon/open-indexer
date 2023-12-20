@@ -32,7 +32,8 @@ func main() {
 
 	config.InitConfig()
 	db.Setup()
-
+	blockscan := db.BlockScan{}
+	blockNumber := uint64(blockscan.GetNumber())
 	api := "https://aia-dataseed2.aiachain.org"
 	w := indexer.NewHttpBasedEthWatcher(context.Background(), api)
 
@@ -70,12 +71,12 @@ func main() {
 				logger.Fatalf("process error, %s", err)
 			}
 		}
-
+		loader.DumpTradeCache()
 		loader.DumpTickerInfoToDB(handlers.BlockNumber, handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
 
 	}))
 
-	w.RunTillExitFromBlock(25338054)
+	w.RunTillExitFromBlock(blockNumber)
 
 
 

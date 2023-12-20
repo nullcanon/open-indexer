@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"open-indexer/model"
 	"open-indexer/utils"
+	"open-indexer/db"
 	"strings"
 	"time"
 )
 
 var Inscriptions []*model.Inscription
+var TradeCache []*db.TradeHistory
+
 var Tokens = make(map[string]*model.Token)
 
 // address -> ticker -> balnce
@@ -33,6 +36,18 @@ func ProcessUpdateARC20(trxs []*model.Transaction) error {
 		}
 	}
 	return nil
+}
+
+func appendTradeCache(inscription *model.Inscription, tick string) {
+	var tardeinfo db.TradeHistory
+	tardeinfo.Ticks = tick
+	tardeinfo.Status = "1"
+	tardeinfo.From = inscription.From
+	tardeinfo.To = inscription.To
+	tardeinfo.Hash = inscription.Id
+	tardeinfo.Time = inscription.Timestamp
+
+	TradeCache = append(TradeCache, &tardeinfo)
 }
 
 func Inscribe(trx *model.Transaction) error {
@@ -92,7 +107,7 @@ func handleProtocols(inscription *model.Inscription) error {
 			value, ok := protoData["p"]
 			if ok && strings.TrimSpace(value) != "" {
 				protocol := strings.ToLower(value)
-				if protocol == "asc-20" {
+				if protocol == "aiars-20" {
 					var asc20 model.Asc20
 					asc20.Number = inscription.Number
 					if value, ok = protoData["tick"]; ok {
@@ -184,6 +199,7 @@ func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[
 }
 
 func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
+	appendTradeCache(inscription, asc20.Tick)
 	value, ok := params["amt"]
 	if !ok {
 		return -21, nil
@@ -279,6 +295,7 @@ func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[st
 }
 
 func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
+	appendTradeCache(inscription, asc20.Tick)
 	value, ok := params["amt"]
 	if !ok {
 		return -31, nil
