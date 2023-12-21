@@ -9,11 +9,12 @@ import (
 )
 
 type TradeHistory struct {
+	Id     int64  `gorm:"type:int(64) UNSIGNED AUTO_INCREMENT;primary_key" json:"id"`
 	Ticks  string `gorm:"column:ticks"`
 	Status string `gorm:"column:status"`
 	From   string `gorm:"column:from_address"`
 	To     string `gorm:"column:to_address"`
-	Hash   string `gorm:"column:hash;primary_key"`
+	Hash   string `gorm:"column:hash;index"`
 	Amount string `gorm:"column:amount"`
 	Time   uint64 `gorm:"column:time"`
 	Number uint64 `gorm:"column:number"`

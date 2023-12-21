@@ -55,7 +55,7 @@ func NewHttpBasedEthWatcher(ctx context.Context, api string) *AbstractWatcher {
 		SyncedBlocks:            list.New(),
 		SyncedTxAndReceipts:     list.New(),
 		MaxSyncedBlockToKeep:    64,
-		sleepSecondsForNewBlock: 5,
+		sleepSecondsForNewBlock: 3,
 		wg:                      sync.WaitGroup{},
 		logger:                  handlers.GetLogger(),
 	}

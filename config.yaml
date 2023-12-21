@@ -4,5 +4,5 @@ mysql:
   db: 'aias'
   password: 'aias.yyds'
   user: 'aias'
-api: ''
+api: '
 start_block: 25823050

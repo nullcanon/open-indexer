@@ -148,6 +148,12 @@ func handleProtocols(inscription *model.Inscription) error {
 func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
 	logger.Info("deployToken ", inscription.Id, " tick: ", asc20.Tick)
 
+	// 暂时只索引aias
+	if asc20.Tick != "aias" {
+		logger.Info("token ", asc20.Tick, " not supply")
+		return -10, nil
+	}
+
 	value, ok := params["max"]
 	if !ok {
 		return -11, nil
