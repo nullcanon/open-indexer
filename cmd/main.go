@@ -33,7 +33,9 @@ func main() {
 	blockscan := db.BlockScan{}
 	blockNumber := uint64(blockscan.GetNumber()) + 1
 	// api := "https://aia-dataseed2.aiachain.org"
-	api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d887b"
+	// api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d887b"
+	// api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d8"
+	api := config.Global.Api
 	w := indexer.NewHttpBasedEthWatcher(context.Background(), api)
 
 	var logger = handlers.GetLogger()
@@ -76,7 +78,8 @@ func main() {
 
 	}))
 
-	w.RunTillExitFromBlock(blockNumber)
+	err := w.RunTillExitFromBlock(blockNumber)
+	logger.Errorln(err.Error())
 
 	// trxs, err := loader.LoadTransactionData(inputfile)
 	// if err != nil {

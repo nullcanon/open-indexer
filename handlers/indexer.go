@@ -26,7 +26,7 @@ var UpdateUsers = make(map[string]bool)
 
 var BlockNumber uint64 = 0
 
-var inscriptionNumber uint64 = 0
+var InscriptionNumber uint64 = 0
 
 func ProcessUpdateARC20(trxs []*model.Transaction) error {
 	for _, inscription := range trxs {
@@ -38,7 +38,7 @@ func ProcessUpdateARC20(trxs []*model.Transaction) error {
 	return nil
 }
 
-func appendTradeCache(inscription *model.Inscription, tick string) {
+func appendTradeCache(inscription *model.Inscription, tick string, amount string) {
 	var tardeinfo db.TradeHistory
 	tardeinfo.Ticks = tick
 	tardeinfo.Status = "1"
@@ -46,6 +46,8 @@ func appendTradeCache(inscription *model.Inscription, tick string) {
 	tardeinfo.To = inscription.To
 	tardeinfo.Hash = inscription.Id
 	tardeinfo.Time = inscription.Timestamp
+	tardeinfo.Amount = amount
+	tardeinfo.Number = inscription.Number
 
 	TradeCache = append(TradeCache, &tardeinfo)
 }
@@ -72,9 +74,9 @@ func Inscribe(trx *model.Transaction) error {
 	}
 	content := input[sepIdx+1:]
 
-	inscriptionNumber++
+	InscriptionNumber++
 	var inscription model.Inscription
-	inscription.Number = inscriptionNumber
+	inscription.Number = InscriptionNumber
 	inscription.Id = trx.Id
 	inscription.From = trx.From
 	inscription.To = trx.To
@@ -107,8 +109,8 @@ func handleProtocols(inscription *model.Inscription) error {
 			value, ok := protoData["p"]
 			if ok && strings.TrimSpace(value) != "" {
 				protocol := strings.ToLower(value)
-				if protocol == "asc-20" {
-					// if protocol == "aiarc-20" {
+				// if protocol == "asc-20" {
+				if protocol == "aias-20" {
 					var asc20 model.Asc20
 					asc20.Number = inscription.Number
 					if value, ok = protoData["tick"]; ok {
@@ -203,7 +205,6 @@ func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[
 func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
 	logger.Info("mintToken ", inscription.Id, " tick: ", asc20.Tick)
 
-	appendTradeCache(inscription, asc20.Tick)
 	value, ok := params["amt"]
 	if !ok {
 		return -21, nil
@@ -221,6 +222,7 @@ func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[st
 	if !exists {
 		return -23, nil
 	}
+	logger.Info("mintToken eists tick: ", asc20.Tick)
 
 	// check precision
 	if precision > token.Precision {
@@ -295,11 +297,13 @@ func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[st
 		token.Holders++
 	}
 
+	appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
+
 	return 1, err
 }
 
 func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
-	appendTradeCache(inscription, asc20.Tick)
+	logger.Info("transferToken ", inscription.Id, " tick: ", asc20.Tick)
 	value, ok := params["amt"]
 	if !ok {
 		return -31, nil
@@ -383,6 +387,8 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 	if newHolder {
 		token.Holders++
 	}
+
+	appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
 
 	return 1, err
 }

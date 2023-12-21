@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"github.com/sirupsen/logrus"
 	"io"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 var logger *logrus.Logger
@@ -22,7 +23,8 @@ func initLogger() {
 	}
 
 	logger = logrus.New()
-	logger.SetLevel(logrus.InfoLevel)
+	// logger.SetLevel(logrus.InfoLevel)
+	logger.SetLevel(logrus.DebugLevel)
 	logger.SetFormatter(&logrus.TextFormatter{})
 	logger.SetOutput(io.MultiWriter(writerStd, writerFile))
 }

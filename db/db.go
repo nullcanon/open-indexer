@@ -4,14 +4,15 @@ import (
 	// "database/sql/driver"
 	"fmt"
 	"log"
+
 	// "time"
 	"open-indexer/config"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 var db *gorm.DB
-
 
 const (
 	sqlType = "mysql"
@@ -19,7 +20,6 @@ const (
 
 func Setup() {
 	var err error
-
 
 	db, err = gorm.Open(sqlType, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		config.Global.MysqlInfo.User,

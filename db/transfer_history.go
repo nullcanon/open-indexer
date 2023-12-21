@@ -14,7 +14,18 @@ type TradeHistory struct {
 	From   string `gorm:"column:from_address"`
 	To     string `gorm:"column:to_address"`
 	Hash   string `gorm:"column:hash;primary_key"`
+	Amount string `gorm:"column:amount"`
 	Time   uint64 `gorm:"column:time"`
+	Number uint64 `gorm:"column:number"`
+}
+
+func (u TradeHistory) GetInscriptionNumber() uint64 {
+	var history TradeHistory
+	err := db.Order("number desc").First(&history).Error
+	if err != nil {
+		return 0
+	}
+	return history.Number
 }
 
 func (u TradeHistory) CreateTradeHistory(tradeHistory TradeHistory) error {

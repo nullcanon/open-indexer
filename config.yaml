@@ -1,9 +1,8 @@
 name: 'block_scan'
 mysql:
-  host: '127.0.0.1:3306'
+  host: ''
   db: 'aias'
-  password: '123456'
-  user: 'root'
-api: '95bhttps://fragrant-dark-pine.bsc.quiknode.pro/977be32e92f335ddc7095549c7264aeedba23/'
+  password: 'aias.yyds'
+  user: 'aias'
+api: ''
 start_block: 25823050
-

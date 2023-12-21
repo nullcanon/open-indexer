@@ -3,19 +3,22 @@ package rpc
 import (
 	"errors"
 	"open-indexer/blockchain"
+	"open-indexer/handlers"
+	"strconv"
+
 	"github.com/onrik/ethrpc"
 	"github.com/sirupsen/logrus"
-	"strconv"
 )
 
 type EthBlockChainRPC struct {
 	rpcImpl *ethrpc.EthRPC
+	logger  *logrus.Logger
 }
 
 func NewEthRPC(api string) *EthBlockChainRPC {
 	rpc := ethrpc.New(api)
 
-	return &EthBlockChainRPC{rpc}
+	return &EthBlockChainRPC{rpc, handlers.GetLogger()}
 }
 
 func (rpc EthBlockChainRPC) GetBlockByNum(num uint64) (blockchain.Block, error) {
@@ -70,17 +73,17 @@ func (rpc EthBlockChainRPC) GetLogs(
 
 	logs, err := rpc.rpcImpl.EthGetLogs(filterParam)
 	if err != nil {
-		logrus.Warnf("EthGetLogs err: %s, params: %+v", err, filterParam)
+		rpc.logger.Warnf("EthGetLogs err: %s, params: %+v", err, filterParam)
 		return nil, err
 	}
 
-	logrus.Debugf("EthGetLogs logs count at block(%d - %d): %d", fromBlockNum, toBlockNum, len(logs))
+	rpc.logger.Debugf("EthGetLogs logs count at block(%d - %d): %d", fromBlockNum, toBlockNum, len(logs))
 
 	var result []blockchain.IReceiptLog
 	for i := 0; i < len(logs); i++ {
 		l := logs[i]
 
-		logrus.Debugf("EthGetLogs receipt log: %+v", l)
+		rpc.logger.Debugf("EthGetLogs receipt log: %+v", l)
 
 		result = append(result, blockchain.ReceiptLog{Log: &l})
 	}

@@ -18,6 +18,7 @@ type InscriptionInfo struct {
 	Ticks       string `gorm:"column:ticks;primary_key"`
 	CreatedAt   uint64 `gorm:"column:created_at"`
 	CompletedAt uint64 `gorm:"column:completed_at"`
+	Number      uint64 `gorm:"column:number"`
 }
 
 func (u InscriptionInfo) CreateInscriptionInfo(inscriptionInfo InscriptionInfo) error {

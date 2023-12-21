@@ -23,12 +23,19 @@ func DumpTradeCache() {
 				"to_address":   trade.To,
 				"hash":         trade.Hash,
 				"time":         trade.Time,
+				"amount":       trade.Amount,
+				"number":       trade.Number,
 			})
 	}
 	handlers.TradeCache = handlers.TradeCache[:0]
 }
 
 func LoadDataBase() {
+
+	history := db.TradeHistory{}
+	handlers.InscriptionNumber = history.GetInscriptionNumber()
+	handlers.GetLogger().Info("InscriptionNumber load succees")
+
 	var insInfos []db.InscriptionInfo
 	ins := db.InscriptionInfo{}
 	ins.FetchInscriptionInfo(&insInfos)
@@ -43,9 +50,13 @@ func LoadDataBase() {
 			Limit:       model.NewDecimalFromStringValue(tokens.Limit),
 			CreatedAt:   tokens.CreatedAt,
 			CompletedAt: int64(tokens.CompletedAt),
+			Number:      tokens.Number,
 		}
+		handlers.TokenHolders[tokens.Ticks] = make(map[string]*model.DDecimal)
 		// handlers.GetLogger().Info(tokens.Ticks, tokens.Trxs, tokens.Minted, tokens.Holders, tokens.Total)
 	}
+
+	handlers.GetLogger().Info("InscriptionInfo load succees")
 
 	var userBalances []db.UserBalances
 	balance := db.UserBalances{}
@@ -66,6 +77,8 @@ func LoadDataBase() {
 		holderB[users.Address] = amt
 		handlers.TokenHolders[users.Ticks] = holderB
 	}
+	handlers.GetLogger().Info("UserBalances load succees")
+
 }
 
 func LoadTransactionData(fname string) ([]*model.Transaction, error) {
@@ -159,6 +172,7 @@ func DumpTickerInfoToDB(
 				"mint_limit":   info.Limit.String(),
 				"created_at":   info.CreatedAt,
 				"completed_at": info.CompletedAt,
+				"number":       info.Number,
 			})
 
 		// handlers.GetLogger().Info("Update inscriptionInfo secuess")
@@ -168,11 +182,19 @@ func DumpTickerInfoToDB(
 		// 	" holders:", len(tokenHolders[ticker]))
 
 		// holders
+		_, exists := handlers.Tokens[ticker]
+		if !exists {
+			continue
+		}
+
 		for holder, needUpdate := range handlers.UpdateUsers {
 			if !needUpdate {
 				continue
 			}
 			balance := tokenHolders[ticker][holder]
+			if balance == nil {
+				continue
+			}
 			user := db.UserBalances{
 				Ticks:   info.Tick,
 				Address: holder,

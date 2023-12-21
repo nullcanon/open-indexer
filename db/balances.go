@@ -1,4 +1,3 @@
-
 package db
 
 import (
@@ -11,9 +10,9 @@ import (
 // ticks address amount
 
 type UserBalances struct {
-	Ticks		string `gorm:"column:ticks;primary_key"`
-	Address		string `gorm:"column:address;primary_key"`
-	Amount		string `gorm:"column:amount; default:'0'"`
+	Ticks   string `gorm:"column:ticks;primary_key"`
+	Address string `gorm:"column:address;primary_key;index"`
+	Amount  string `gorm:"column:amount; default:'0'"`
 }
 
 func (u UserBalances) CreateUserBalances(userinfo UserBalances) error {
