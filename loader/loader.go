@@ -34,9 +34,6 @@ func LoadDataBase() {
 
 	history := db.TradeHistory{}
 	handlers.InscriptionNumber = history.GetInscriptionNumber()
-	if handlers.InscriptionNumber == 0 {
-		handlers.InscriptionNumber = 60000
-	}
 	handlers.GetLogger().Info("InscriptionNumber load succees ", handlers.InscriptionNumber)
 
 	var insInfos []db.InscriptionInfo

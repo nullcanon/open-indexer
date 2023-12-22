@@ -26,7 +26,7 @@ var UpdateUsers = make(map[string]bool)
 
 var BlockNumber uint64 = 0
 
-var InscriptionNumber uint64 = 60000
+var InscriptionNumber uint64 = 0
 
 func ProcessUpdateARC20(trxs []*model.Transaction) error {
 	for _, inscription := range trxs {
