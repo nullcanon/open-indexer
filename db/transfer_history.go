@@ -17,7 +17,7 @@ type TradeHistory struct {
 	Hash   string `gorm:"column:hash;index"`
 	Amount string `gorm:"column:amount"`
 	Time   uint64 `gorm:"column:time"`
-	Number uint64 `gorm:"column:number"`
+	Number uint64 `gorm:"column:number;index"`
 }
 
 func (u TradeHistory) GetInscriptionNumber() uint64 {
