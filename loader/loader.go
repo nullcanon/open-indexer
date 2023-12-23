@@ -11,9 +11,11 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func DumpTradeCache() {
+	startTime := time.Now()
 	for _, trade := range handlers.TradeCache {
 		trade.Update(
 			map[string]interface{}{
@@ -27,6 +29,7 @@ func DumpTradeCache() {
 				"number":       trade.Number,
 			})
 	}
+	handlers.GetLogger().Info("DumpTradeCache succees ", time.Since(startTime))
 	handlers.TradeCache = handlers.TradeCache[:0]
 }
 
@@ -146,6 +149,7 @@ func DumpTickerInfoToDB(
 	userBalances map[string]map[string]*model.DDecimal,
 	tokenHolders map[string]map[string]*model.DDecimal,
 ) {
+	startTime := time.Now()
 	var allTickers []string
 	for ticker := range tokens {
 		allTickers = append(allTickers, ticker)
@@ -209,12 +213,14 @@ func DumpTickerInfoToDB(
 			handlers.UpdateUsers[holder] = false
 		}
 	}
-
+	handlers.GetLogger().Info("DumpTickerInfoToDB succees ", time.Since(startTime))
 }
 
 func DumpBlockNumber(blockNumber uint64) {
+	startTime := time.Now()
 	blocnscan := db.BlockScan{}
 	blocnscan.UptadeBlockNumber(blockNumber)
+	handlers.GetLogger().Info("DumpBlockNumber succees ", time.Since(startTime))
 }
 
 func DumpTickerInfoMap(fname string,
