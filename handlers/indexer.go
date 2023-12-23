@@ -7,11 +7,11 @@ import (
 	"open-indexer/model"
 	"open-indexer/utils"
 	"strings"
+	"sync"
 	"time"
 )
 
 var Inscriptions []*model.Inscription
-var TradeCache []*db.TradeHistory
 
 var Tokens = make(map[string]*model.Token)
 
@@ -27,6 +27,10 @@ var UpdateUsers = make(map[string]bool)
 var BlockNumber uint64 = 0
 
 var InscriptionNumber uint64 = 0
+
+var DBLock sync.RWMutex
+
+var TradeCache = make(chan *db.TradeHistory, 512)
 
 func ProcessUpdateARC20(trxs []*model.Transaction) error {
 	for _, inscription := range trxs {
@@ -49,7 +53,7 @@ func appendTradeCache(inscription *model.Inscription, tick string, amount string
 	tardeinfo.Amount = amount
 	tardeinfo.Number = inscription.Number
 
-	TradeCache = append(TradeCache, &tardeinfo)
+	TradeCache <- &tardeinfo
 }
 
 func Inscribe(trx *model.Transaction) error {

@@ -15,8 +15,7 @@ import (
 )
 
 func DumpTradeCache() {
-	startTime := time.Now()
-	for _, trade := range handlers.TradeCache {
+	for trade := range handlers.TradeCache {
 		trade.Update(
 			map[string]interface{}{
 				"ticks":        trade.Ticks,
@@ -29,8 +28,6 @@ func DumpTradeCache() {
 				"number":       trade.Number,
 			})
 	}
-	handlers.GetLogger().Info("DumpTradeCache succees ", time.Since(startTime))
-	handlers.TradeCache = handlers.TradeCache[:0]
 }
 
 func LoadDataBase() {
@@ -216,11 +213,12 @@ func DumpTickerInfoToDB(
 	handlers.GetLogger().Info("DumpTickerInfoToDB succees ", time.Since(startTime))
 }
 
-func DumpBlockNumber(blockNumber uint64) {
-	startTime := time.Now()
+func DumpBlockNumber() {
+	if handlers.BlockNumber <= 0 {
+		return
+	}
 	blocnscan := db.BlockScan{}
-	blocnscan.UptadeBlockNumber(blockNumber)
-	handlers.GetLogger().Info("DumpBlockNumber succees ", time.Since(startTime))
+	blocnscan.UptadeBlockNumber(handlers.BlockNumber)
 }
 
 func DumpTickerInfoMap(fname string,

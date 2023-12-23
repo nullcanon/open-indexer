@@ -12,6 +12,7 @@ import (
 	"open-indexer/model"
 	"open-indexer/plugin"
 	"open-indexer/structs"
+	"time"
 )
 
 var (
@@ -42,6 +43,22 @@ func main() {
 	loader.LoadDataBase()
 
 	logger.Info("start index ", blockNumber)
+
+	go loader.DumpTradeCache()
+
+	ticker1 := time.NewTicker(30 * time.Second)
+	defer ticker1.Stop()
+
+	go func(t *time.Ticker) {
+		for {
+			<-t.C
+			handlers.DBLock.Lock()
+			loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
+			loader.DumpBlockNumber()
+			handlers.DBLock.Unlock()
+		}
+	}(ticker1)
+
 	// we use BlockPlugin here
 	w.RegisterBlockPlugin(plugin.NewSimpleBlockPlugin(func(block *structs.RemovableBlock) {
 		if block.IsRemoved {
@@ -67,15 +84,14 @@ func main() {
 
 				trxs = append(trxs, &data)
 			}
+			handlers.DBLock.Lock()
 			err := handlers.ProcessUpdateARC20(trxs)
 			if err != nil {
 				logger.Fatalf("process error, %s", err)
 			}
-		}
-		go loader.DumpTradeCache()
-		loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
-		loader.DumpBlockNumber(block.Number())
+			handlers.DBLock.Unlock()
 
+		}
 	}))
 
 	err := w.RunTillExitFromBlock(blockNumber)
