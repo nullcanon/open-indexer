@@ -209,7 +209,7 @@ func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[
 }
 
 func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
-	logger.Info("mintToken ", inscription.Id, " tick: ", asc20.Tick)
+	// logger.Info("mintToken ", inscription.Id, " tick: ", asc20.Tick)
 
 	value, ok := params["amt"]
 	if !ok {
@@ -228,7 +228,7 @@ func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[st
 	if !exists {
 		return -23, nil
 	}
-	logger.Info("mintToken eists tick: ", asc20.Tick)
+	// logger.Info("mintToken eists tick: ", asc20.Tick)
 
 	// check precision
 	if precision > token.Precision {
