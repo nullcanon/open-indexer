@@ -72,7 +72,7 @@ func main() {
 				logger.Fatalf("process error, %s", err)
 			}
 		}
-		loader.DumpTradeCache()
+		go loader.DumpTradeCache()
 		loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
 		loader.DumpBlockNumber(block.Number())
 

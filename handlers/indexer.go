@@ -303,7 +303,7 @@ func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[st
 		token.Holders++
 	}
 
-	appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
+	go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
 
 	return 1, err
 }
@@ -394,7 +394,7 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 		token.Holders++
 	}
 
-	appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
+	go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
 
 	return 1, err
 }
