@@ -2,33 +2,37 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
+
 func GetEnvInfo(env string) bool {
 	viper.AutomaticEnv()
 	return viper.GetBool(env)
 	//刚才设置的环境变量 想要生效 我们必须得重启goland
 }
 func GetCurrentDirectory() string {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))  //返回绝对路径  filepath.Dir(os.Args[0])去除最后一个元素的路径
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0])) //返回绝对路径  filepath.Dir(os.Args[0])去除最后一个元素的路径
 	if err != nil {
 		log.Fatal(err)
 	}
 	return strings.Replace(dir, "\\", "/", -1) //将\替换成/
 }
+
 var Global *ServerConfig
-func InitConfig(){
+
+func InitConfig() {
 	//从配置文件中读取出对应的配置
 	debug := GetEnvInfo("Mall_DEBUG")
 	configFilePrefix := "config"
 	//fmt.Println("path=",GetCurrentDirectory())
 	//configFileName := fmt.Sprintf("auth/%s-pro.yaml", configFilePrefix)
-	configFileName := fmt.Sprintf("./%s.yaml", configFilePrefix)
+	configFileName := fmt.Sprintf("/var/indexer/%s.yaml", configFilePrefix)
 	if debug {
 		configFileName = fmt.Sprintf("./%s-debug.yaml", configFilePrefix)
 	}
