@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/hex"
 	"encoding/json"
-	"open-indexer/db"
 	"open-indexer/model"
 	"open-indexer/utils"
 	"strings"
@@ -30,7 +29,7 @@ var InscriptionNumber uint64 = 0
 
 var DBLock sync.RWMutex
 
-var TradeCache = make(chan *db.TradeHistory, 512)
+// var TradeCache = make(chan *db.TradeHistory, 512)
 
 func ProcessUpdateARC20(trxs []*model.Transaction) error {
 	for _, inscription := range trxs {
@@ -42,19 +41,19 @@ func ProcessUpdateARC20(trxs []*model.Transaction) error {
 	return nil
 }
 
-func appendTradeCache(inscription *model.Inscription, tick string, amount string) {
-	var tardeinfo db.TradeHistory
-	tardeinfo.Ticks = tick
-	tardeinfo.Status = "1"
-	tardeinfo.From = inscription.From
-	tardeinfo.To = inscription.To
-	tardeinfo.Hash = inscription.Id
-	tardeinfo.Time = inscription.Timestamp
-	tardeinfo.Amount = amount
-	tardeinfo.Number = inscription.Number
+// func appendTradeCache(inscription *model.Inscription, tick string, amount string) {
+// 	var tardeinfo db.TradeHistory
+// 	tardeinfo.Ticks = tick
+// 	tardeinfo.Status = "1"
+// 	tardeinfo.From = inscription.From
+// 	tardeinfo.To = inscription.To
+// 	tardeinfo.Hash = inscription.Id
+// 	tardeinfo.Time = inscription.Timestamp
+// 	tardeinfo.Amount = amount
+// 	tardeinfo.Number = inscription.Number
 
-	TradeCache <- &tardeinfo
-}
+// 	TradeCache <- &tardeinfo
+// }
 
 func Inscribe(trx *model.Transaction) error {
 	// data:,
@@ -307,7 +306,7 @@ func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[st
 		token.Holders++
 	}
 
-	go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
+	// go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
 
 	return 1, err
 }
@@ -398,7 +397,7 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 		token.Holders++
 	}
 
-	go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
+	// go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
 
 	return 1, err
 }

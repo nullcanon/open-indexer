@@ -14,21 +14,21 @@ import (
 	"time"
 )
 
-func DumpTradeCache() {
-	for trade := range handlers.TradeCache {
-		trade.Update(
-			map[string]interface{}{
-				"ticks":        trade.Ticks,
-				"status":       trade.Status,
-				"from_address": trade.From,
-				"to_address":   trade.To,
-				"hash":         trade.Hash,
-				"time":         trade.Time,
-				"amount":       trade.Amount,
-				"number":       trade.Number,
-			})
-	}
-}
+// func DumpTradeCache() {
+// 	for trade := range handlers.TradeCache {
+// 		trade.Update(
+// 			map[string]interface{}{
+// 				"ticks":        trade.Ticks,
+// 				"status":       trade.Status,
+// 				"from_address": trade.From,
+// 				"to_address":   trade.To,
+// 				"hash":         trade.Hash,
+// 				"time":         trade.Time,
+// 				"amount":       trade.Amount,
+// 				"number":       trade.Number,
+// 			})
+// 	}
+// }
 
 func LoadDataBase() {
 

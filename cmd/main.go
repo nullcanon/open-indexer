@@ -44,7 +44,7 @@ func main() {
 
 	logger.Info("start index ", blockNumber)
 
-	go loader.DumpTradeCache()
+	// go loader.DumpTradeCache()
 
 	ticker1 := time.NewTicker(30 * time.Second)
 	defer ticker1.Stop()
