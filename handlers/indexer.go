@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"open-indexer/model"
+	"open-indexer/server"
 	"open-indexer/utils"
 	"strings"
 	"sync"
@@ -29,7 +30,7 @@ var InscriptionNumber uint64 = 0
 
 var DBLock sync.RWMutex
 
-// var TradeCache = make(chan *db.TradeHistory, 512)
+var TradeCache []*model.HistoryMessage
 
 func ProcessUpdateARC20(trxs []*model.Transaction) error {
 	for _, inscription := range trxs {
@@ -41,19 +42,32 @@ func ProcessUpdateARC20(trxs []*model.Transaction) error {
 	return nil
 }
 
-// func appendTradeCache(inscription *model.Inscription, tick string, amount string) {
-// 	var tardeinfo db.TradeHistory
-// 	tardeinfo.Ticks = tick
-// 	tardeinfo.Status = "1"
-// 	tardeinfo.From = inscription.From
-// 	tardeinfo.To = inscription.To
-// 	tardeinfo.Hash = inscription.Id
-// 	tardeinfo.Time = inscription.Timestamp
-// 	tardeinfo.Amount = amount
-// 	tardeinfo.Number = inscription.Number
+func notifyNewTick(asc20 *model.Asc20) {
+	var tickMsg model.TickMessage
+	tickMsg.Limit = asc20.Limit.String()
+	tickMsg.Max = asc20.Max.String()
+	tickMsg.Tick = asc20.Tick
+	server.SubHandler.Publish(server.NewTick, &tickMsg)
+}
 
-// 	TradeCache <- &tardeinfo
-// }
+func NotifyHistory() {
+	server.SubHandler.Publish(server.History, TradeCache)
+	TradeCache = TradeCache[:0]
+}
+
+func appendTradeCache(inscription *model.Inscription, tick string, amount string) {
+	var tardeinfo model.HistoryMessage
+	tardeinfo.Tick = tick
+	tardeinfo.Status = "1"
+	tardeinfo.From = inscription.From
+	tardeinfo.To = inscription.To
+	tardeinfo.Hash = inscription.Id
+	tardeinfo.Time = inscription.Timestamp
+	tardeinfo.Amount = amount
+	tardeinfo.Number = inscription.Number
+
+	TradeCache = append(TradeCache, &tardeinfo)
+}
 
 func Inscribe(trx *model.Transaction) error {
 	// data:,
@@ -152,10 +166,10 @@ func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[
 	logger.Info("deployToken ", inscription.Id, " tick: ", asc20.Tick)
 
 	// 暂时只索引aias
-	if asc20.Tick != "aias" {
-		logger.Info("token ", asc20.Tick, " not supply")
-		return -10, nil
-	}
+	// if asc20.Tick != "aias" {
+	// 	logger.Info("token ", asc20.Tick, " not supply")
+	// 	return -10, nil
+	// }
 
 	value, ok := params["max"]
 	if !ok {
@@ -207,7 +221,7 @@ func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[
 	// save
 	Tokens[strings.ToLower(token.Tick)] = token
 	TokenHolders[strings.ToLower(token.Tick)] = make(map[string]*model.DDecimal)
-
+	notifyNewTick(asc20)
 	return 1, nil
 }
 
@@ -307,6 +321,7 @@ func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[st
 	}
 
 	// go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
+	appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
 
 	return 1, err
 }
@@ -398,6 +413,7 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 	}
 
 	// go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
+	appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
 
 	return 1, err
 }

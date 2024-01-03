@@ -11,7 +11,12 @@ import (
 	"open-indexer/loader"
 	"open-indexer/model"
 	"open-indexer/plugin"
+	"open-indexer/server"
+	"open-indexer/service"
 	"open-indexer/structs"
+	"time"
+
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 var (
@@ -31,10 +36,9 @@ func main() {
 	config.InitConfig()
 	db.Setup()
 	blockscan := db.BlockScan{}
-	blockNumber := uint64(blockscan.GetNumber()) + 1
-	// api := "https://aia-dataseed2.aiachain.org"
-	// api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d887b"
-	// api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d8"
+	nblockNumber, number := blockscan.GetNumber()
+	blockNumber := uint64(nblockNumber) + 1
+	handlers.InscriptionNumber = uint64(number)
 	api := config.Global.Api
 	w := indexer.NewHttpBasedEthWatcher(context.Background(), api)
 
@@ -45,8 +49,18 @@ func main() {
 
 	// go loader.DumpTradeCache()
 
-	// ticker1 := time.NewTicker(30 * time.Second)
-	// defer ticker1.Stop()
+	ticker1 := time.NewTicker(30 * time.Second)
+	defer ticker1.Stop()
+	go func(t *time.Ticker) {
+		duration := 60 * time.Second
+		time.Sleep(duration)
+		for {
+			<-t.C
+			var pong model.PongMessage
+			pong.Pong = "pong"
+			server.SubHandler.Publish(server.Ping, &pong)
+		}
+	}(ticker1)
 
 	// go func(t *time.Ticker) {
 	// 	for {
@@ -57,6 +71,23 @@ func main() {
 	// 		handlers.DBLock.Unlock()
 	// 	}
 	// }(ticker1)
+
+	rpcAPI := []rpc.API{
+		{
+			Namespace: "tick",
+			Version:   "1.0",
+			Service:   service.NewTickService(),
+			Public:    true,
+		},
+	}
+
+	httpSrv := server.NewServer(rpcAPI, logger, server.HTTP)
+	httpSrv.Start()
+	defer httpSrv.Stop()
+
+	wsSrv := server.NewServer(rpcAPI, logger, server.WS)
+	wsSrv.Start()
+	defer wsSrv.Stop()
 
 	// we use BlockPlugin here
 	w.RegisterBlockPlugin(plugin.NewSimpleBlockPlugin(func(block *structs.RemovableBlock) {
@@ -89,24 +120,12 @@ func main() {
 			}
 			loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
 			loader.DumpBlockNumber()
+			handlers.NotifyHistory()
 
 		}
 	}))
 
 	err := w.RunTillExitFromBlock(blockNumber)
 	logger.Errorln(err.Error())
-
-	// trxs, err := loader.LoadTransactionData(inputfile)
-	// if err != nil {
-	// 	logger.Fatalf("invalid input, %s", err)
-	// }
-
-	// err = handlers.ProcessUpdateARC20(trxs)
-	// if err != nil {
-	// 	logger.Fatalf("process error, %s", err)
-	// }
-
-	// print
-	// loader.DumpTickerInfoMap(outputfile, handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
 
 }

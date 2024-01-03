@@ -32,9 +32,9 @@ import (
 
 func LoadDataBase() {
 
-	history := db.TradeHistory{}
-	handlers.InscriptionNumber = history.GetInscriptionNumber()
-	handlers.GetLogger().Info("InscriptionNumber load succees ", handlers.InscriptionNumber)
+	// history := db.TradeHistory{}
+	// handlers.InscriptionNumber = history.GetInscriptionNumber()
+	// handlers.GetLogger().Info("InscriptionNumber load succees ", handlers.InscriptionNumber)
 
 	var insInfos []db.InscriptionInfo
 	ins := db.InscriptionInfo{}
@@ -218,7 +218,7 @@ func DumpBlockNumber() {
 		return
 	}
 	blocnscan := db.BlockScan{}
-	blocnscan.UptadeBlockNumber(handlers.BlockNumber)
+	blocnscan.UptadeBlockNumber(handlers.BlockNumber, handlers.InscriptionNumber)
 }
 
 func DumpTickerInfoMap(fname string,
