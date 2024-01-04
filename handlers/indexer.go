@@ -65,6 +65,11 @@ func appendTradeCache(inscription *model.Inscription, tick string, amount string
 	tardeinfo.Time = inscription.Timestamp
 	tardeinfo.Amount = amount
 	tardeinfo.Number = inscription.Number
+	if inscription.From == inscription.To {
+		tardeinfo.Method = "mint"
+	} else {
+		tardeinfo.Method = "transfer"
+	}
 
 	TradeCache = append(TradeCache, &tardeinfo)
 }
@@ -216,6 +221,8 @@ func deployToken(asc20 *model.Asc20, inscription *model.Inscription, params map[
 		Progress:    0,
 		CreatedAt:   inscription.Timestamp,
 		CompletedAt: int64(0),
+		Creater:     inscription.From,
+		Hash:        inscription.Id,
 	}
 
 	// save

@@ -51,6 +51,8 @@ func LoadDataBase() {
 			CreatedAt:   tokens.CreatedAt,
 			CompletedAt: int64(tokens.CompletedAt),
 			Number:      tokens.Number,
+			Creater:     tokens.Creater,
+			Hash:        tokens.Hash,
 		}
 		handlers.TokenHolders[tokens.Ticks] = make(map[string]*model.DDecimal)
 		// handlers.GetLogger().Info(tokens.Ticks, tokens.Trxs, tokens.Minted, tokens.Holders, tokens.Total)

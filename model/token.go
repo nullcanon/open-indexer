@@ -12,4 +12,6 @@ type Token struct {
 	Trxs        int32
 	CreatedAt   uint64
 	CompletedAt int64
+	Creater     string
+	Hash        string
 }
