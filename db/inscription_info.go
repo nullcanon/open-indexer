@@ -21,7 +21,7 @@ type InscriptionInfo struct {
 	Number      uint64 `gorm:"column:number"`
 	Creater     string `gorm:"column:creater"`
 	Hash        string `gorm:"column:tx_hash"`
-	Precision   int    `gorm:"column:precision"`
+	Precision   int    `gorm:"column:prec"`
 }
 
 func (u InscriptionInfo) CreateInscriptionInfo(inscriptionInfo InscriptionInfo) error {
