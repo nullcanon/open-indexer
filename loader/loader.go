@@ -176,6 +176,9 @@ func DumpTickerInfoToDB(
 				"created_at":   info.CreatedAt,
 				"completed_at": info.CompletedAt,
 				"number":       info.Number,
+				"creater":      info.Creater,
+				"tx_hash":      info.Hash,
+				"prec":         0,
 			})
 
 		// handlers.GetLogger().Info("Update inscriptionInfo secuess")
@@ -209,9 +212,16 @@ func DumpTickerInfoToDB(
 				})
 			// handlers.GetLogger().Info(ticker, holder)
 			// handlers.GetLogger().Info("Update balance secuess:", holder, " amount: ", balance.String())
-			handlers.UpdateUsers[holder] = false
 		}
 	}
+
+	for holder, needUpdate := range handlers.UpdateUsers {
+		if !needUpdate {
+			continue
+		}
+		handlers.UpdateUsers[holder] = false
+	}
+
 	handlers.GetLogger().Info("DumpTickerInfoToDB succees ", time.Since(startTime))
 }
 
