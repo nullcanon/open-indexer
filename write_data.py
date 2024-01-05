@@ -48,7 +48,7 @@ for row in results:
 
 
     key = "aias:trade:history:set:aias"
-    source = float(data["method"])
+    source = float(data["number"])
     value = json.dumps(data)
     print(value)
     # ret = r.zadd(key,{value:source})
