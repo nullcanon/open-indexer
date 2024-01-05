@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	indexer "open-indexer"
 	"open-indexer/config"
@@ -15,17 +14,17 @@ import (
 	"time"
 )
 
-var (
-	inputfile  string
-	outputfile string
-)
+// var (
+// 	inputfile  string
+// 	outputfile string
+// )
 
-func init() {
-	flag.StringVar(&inputfile, "input", "./data/asc20.input.txt", "the filename of input data, default(./data/asc20.input.txt)")
-	flag.StringVar(&outputfile, "output", "./data/asc20.output.txt", "the filename of output result, default(./data/asc20.output.txt)")
+// func init() {
+// 	flag.StringVar(&inputfile, "input", "./data/asc20.input.txt", "the filename of input data, default(./data/asc20.input.txt)")
+// 	flag.StringVar(&outputfile, "output", "./data/asc20.output.txt", "the filename of output result, default(./data/asc20.output.txt)")
 
-	flag.Parse()
-}
+// 	flag.Parse()
+// }
 
 func main() {
 
