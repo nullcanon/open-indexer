@@ -4,13 +4,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"open-indexer/model"
+	"open-indexer/plugin"
+	"open-indexer/rpc"
 	"open-indexer/utils"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
-var Inscriptions []*model.Inscription
+// var Inscriptions []*model.Inscription
 
 var Tokens = make(map[string]*model.Token)
 
@@ -28,6 +32,8 @@ var BlockNumber uint64 = 0
 var InscriptionNumber uint64 = 0
 
 var DBLock sync.RWMutex
+
+var Ethrpc *rpc.EthBlockChainRPC
 
 // var TradeCache = make(chan *db.TradeHistory, 512)
 
@@ -56,49 +62,86 @@ func ProcessUpdateARC20(trxs []*model.Transaction) error {
 // }
 
 func Inscribe(trx *model.Transaction) error {
+
+	hasFix := strings.HasPrefix(trx.Input, "0x646174613a")
+
 	// data:,
-	if !strings.HasPrefix(trx.Input, "0x646174613a") {
-		return nil
-	}
-	bytes, err := hex.DecodeString(trx.Input[2:])
-	if err != nil {
-		logger.Warn("inscribe err", err, " at block ", trx.Block, ":", trx.Idx)
-		return nil
-	}
-	input := string(bytes)
+	if hasFix || trx.To == "0x418A611e32312d6bd6BBEAAbC583dF57143F4F42" {
 
-	sepIdx := strings.Index(input, ",")
-	if sepIdx == -1 || sepIdx == len(input)-1 {
-		return nil
+		bytes, err := hex.DecodeString(trx.Input[2:])
+		if err != nil {
+			logger.Warn("inscribe err", err, " at block ", trx.Block, ":", trx.Idx)
+			return nil
+		}
+		input := string(bytes)
+
+		sepIdx := strings.Index(input, ",")
+		if sepIdx == -1 || sepIdx == len(input)-1 {
+			return nil
+		}
+		contentType := "text/plain"
+		if sepIdx > 5 {
+			contentType = input[5:sepIdx]
+		}
+		content := input[sepIdx+1:]
+
+		InscriptionNumber++
+		var inscription model.Inscription
+		inscription.Number = InscriptionNumber
+		inscription.Id = trx.Id
+		inscription.From = trx.From
+		inscription.To = trx.To
+		inscription.Block = trx.Block
+		inscription.Idx = trx.Idx
+		inscription.Timestamp = trx.Timestamp
+		inscription.ContentType = contentType
+		inscription.Content = content
+		BlockNumber = trx.Block
+
+		if !hasFix {
+			// 获取交易log
+			if err := handleEvmLog(&inscription); err != nil {
+				logger.Info("error at ", inscription.Number)
+
+				return err
+			}
+			return nil
+		} else {
+			if err := handleProtocols(&inscription); err != nil {
+				logger.Info("error at ", inscription.Number)
+
+				return err
+			}
+		}
+		// Inscriptions = append(Inscriptions, &inscription)
 	}
-	contentType := "text/plain"
-	if sepIdx > 5 {
-		contentType = input[5:sepIdx]
-	}
-	content := input[sepIdx+1:]
-
-	InscriptionNumber++
-	var inscription model.Inscription
-	inscription.Number = InscriptionNumber
-	inscription.Id = trx.Id
-	inscription.From = trx.From
-	inscription.To = trx.To
-	inscription.Block = trx.Block
-	inscription.Idx = trx.Idx
-	inscription.Timestamp = trx.Timestamp
-	inscription.ContentType = contentType
-	inscription.Content = content
-	BlockNumber = trx.Block
-
-	if err := handleProtocols(&inscription); err != nil {
-		logger.Info("error at ", inscription.Number)
-
-		return err
-	}
-
-	Inscriptions = append(Inscriptions, &inscription)
 
 	return nil
+}
+
+func handleEvmLog(inscription *model.Inscription) error {
+	txReceipt, err := Ethrpc.GetTransactionReceipt(inscription.Id)
+	if err == nil {
+		subLogs := txReceipt.GetLogs()
+		for _, subLog := range subLogs {
+			subTopics := subLog.GetTopics()
+			if subTopics[0] != "0x11c57dfe5e3d216d9107fdc9e7cca2cf14a175fd4de91d06c28a1ff238dbedce" {
+				return nil
+			}
+			subFrom := common.HexToAddress(subTopics[1]).String()
+			subTo := common.HexToAddress(subTopics[2]).String()
+			usdtWeiamount, _ := plugin.HexToDecimal(subLog.GetData())
+			tick := subLog.GetData()
+			var asc20 model.Asc20
+			asc20.Number = inscription.Number
+			asc20.Tick = tick
+			asc20.Operation = "transfer"
+			// TODO 地址大小写区分是否一样
+			transferTokenContract(&asc20, subFrom, subTo, usdtWeiamount)
+		}
+	}
+	return nil
+
 }
 
 func handleProtocols(inscription *model.Inscription) error {
@@ -311,6 +354,82 @@ func mintToken(asc20 *model.Asc20, inscription *model.Inscription, params map[st
 	return 1, err
 }
 
+func transferTokenContract(asc20 *model.Asc20, from string, to string, amt *model.DDecimal) (int8, error) {
+	// check token
+	tick := strings.ToLower(asc20.Tick)
+	token, exists := Tokens[tick]
+	if !exists {
+		return -33, nil
+	}
+
+	if amt.Sign() <= 0 {
+		return -35, nil
+	}
+
+	if from == to {
+		// send to self
+		return -36, nil
+	}
+
+	asc20.Amount = amt
+
+	tokenHolders, _ := TokenHolders[tick]
+	fromBalances, ok := UserBalances[from]
+	if !ok {
+		return -37, nil
+	}
+	toBalances, ok := UserBalances[to]
+	if !ok {
+		toBalances = make(map[string]*model.DDecimal)
+		UserBalances[to] = toBalances
+	}
+
+	var newHolder = false
+
+	fromBalance, ok := fromBalances[tick]
+	if !ok {
+		return -37, nil
+	}
+
+	if amt.Cmp(fromBalance) == 1 {
+		return -37, nil
+	}
+
+	fromBalance = fromBalance.Sub(amt)
+
+	if fromBalance.Sign() == 0 {
+		token.Holders--
+	}
+
+	// To
+	toBalance, ok := toBalances[tick]
+	if !ok {
+		toBalance = model.NewDecimal()
+		newHolder = true
+	}
+	if toBalance.Sign() == 0 {
+		newHolder = true
+	}
+	toBalance = toBalance.Add(amt)
+
+	// update
+	fromBalances[tick] = fromBalance
+	toBalances[tick] = toBalance
+	tokenHolders[from] = fromBalance
+	tokenHolders[to] = toBalance
+
+	UpdateUsers[from] = true
+	UpdateUsers[to] = true
+
+	if newHolder {
+		token.Holders++
+	}
+
+	// go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
+
+	return 1, nil
+}
+
 func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params map[string]string) (int8, error) {
 	logger.Info("transferToken ", inscription.Id, " tick: ", asc20.Tick)
 	value, ok := params["amt"]
@@ -398,6 +517,9 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 	}
 
 	// go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
-
+	// TODO 发通知
+	// if inscription.To ==  "contract address" {
+	// 	//
+	// }
 	return 1, err
 }

@@ -3,6 +3,8 @@ package rpc
 import (
 	"open-indexer/blockchain"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type EthBlockChainRPCWithRetry struct {
@@ -10,8 +12,8 @@ type EthBlockChainRPCWithRetry struct {
 	maxRetryTimes int
 }
 
-func NewEthRPCWithRetry(api string, maxRetryCount int) *EthBlockChainRPCWithRetry {
-	rpc := NewEthRPC(api)
+func NewEthRPCWithRetry(api string, maxRetryCount int, logger *logrus.Logger) *EthBlockChainRPCWithRetry {
+	rpc := NewEthRPC(api, logger)
 
 	return &EthBlockChainRPCWithRetry{rpc, maxRetryCount}
 }

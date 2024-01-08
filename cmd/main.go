@@ -10,6 +10,7 @@ import (
 	"open-indexer/loader"
 	"open-indexer/model"
 	"open-indexer/plugin"
+	"open-indexer/rpc"
 	"open-indexer/structs"
 	"time"
 )
@@ -23,10 +24,13 @@ import (
 // 	flag.StringVar(&inputfile, "input", "./data/asc20.input.txt", "the filename of input data, default(./data/asc20.input.txt)")
 // 	flag.StringVar(&outputfile, "output", "./data/asc20.output.txt", "the filename of output result, default(./data/asc20.output.txt)")
 
-// 	flag.Parse()
-// }
+//		flag.Parse()
+//	}
 
 func main() {
+
+	api := config.Global.Api
+	handlers.Ethrpc = rpc.NewEthRPC(api)
 
 	config.InitConfig()
 	db.Setup()
@@ -35,7 +39,6 @@ func main() {
 	// api := "https://aia-dataseed2.aiachain.org"
 	// api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d887b"
 	// api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d8"
-	api := config.Global.Api
 	w := indexer.NewHttpBasedEthWatcher(context.Background(), api)
 
 	var logger = handlers.GetLogger()

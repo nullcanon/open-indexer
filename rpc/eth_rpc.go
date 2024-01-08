@@ -3,7 +3,6 @@ package rpc
 import (
 	"errors"
 	"open-indexer/blockchain"
-	"open-indexer/handlers"
 	"strconv"
 
 	"github.com/onrik/ethrpc"
@@ -15,10 +14,10 @@ type EthBlockChainRPC struct {
 	logger  *logrus.Logger
 }
 
-func NewEthRPC(api string) *EthBlockChainRPC {
+func NewEthRPC(api string, logger *logrus.Logger) *EthBlockChainRPC {
 	rpc := ethrpc.New(api)
 
-	return &EthBlockChainRPC{rpc, handlers.GetLogger()}
+	return &EthBlockChainRPC{rpc, logger}
 }
 
 func (rpc EthBlockChainRPC) GetBlockByNum(num uint64) (blockchain.Block, error) {
