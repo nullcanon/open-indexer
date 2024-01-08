@@ -32,9 +32,9 @@ import (
 
 func LoadDataBase() {
 
-	history := db.TradeHistory{}
-	handlers.InscriptionNumber = history.GetInscriptionNumber()
-	handlers.GetLogger().Info("InscriptionNumber load succees ", handlers.InscriptionNumber)
+	// history := db.TradeHistory{}
+	// handlers.InscriptionNumber = history.GetInscriptionNumber()
+	// handlers.GetLogger().Info("InscriptionNumber load succees ", handlers.InscriptionNumber)
 
 	var insInfos []db.InscriptionInfo
 	ins := db.InscriptionInfo{}
@@ -51,6 +51,8 @@ func LoadDataBase() {
 			CreatedAt:   tokens.CreatedAt,
 			CompletedAt: int64(tokens.CompletedAt),
 			Number:      tokens.Number,
+			Creater:     tokens.Creater,
+			Hash:        tokens.Hash,
 		}
 		handlers.TokenHolders[tokens.Ticks] = make(map[string]*model.DDecimal)
 		// handlers.GetLogger().Info(tokens.Ticks, tokens.Trxs, tokens.Minted, tokens.Holders, tokens.Total)
@@ -174,6 +176,9 @@ func DumpTickerInfoToDB(
 				"created_at":   info.CreatedAt,
 				"completed_at": info.CompletedAt,
 				"number":       info.Number,
+				"creater":      info.Creater,
+				"tx_hash":      info.Hash,
+				"prec":         0,
 			})
 
 		// handlers.GetLogger().Info("Update inscriptionInfo secuess")
@@ -207,9 +212,16 @@ func DumpTickerInfoToDB(
 				})
 			// handlers.GetLogger().Info(ticker, holder)
 			// handlers.GetLogger().Info("Update balance secuess:", holder, " amount: ", balance.String())
-			handlers.UpdateUsers[holder] = false
 		}
 	}
+
+	for holder, needUpdate := range handlers.UpdateUsers {
+		if !needUpdate {
+			continue
+		}
+		handlers.UpdateUsers[holder] = false
+	}
+
 	handlers.GetLogger().Info("DumpTickerInfoToDB succees ", time.Since(startTime))
 }
 
@@ -218,7 +230,7 @@ func DumpBlockNumber() {
 		return
 	}
 	blocnscan := db.BlockScan{}
-	blocnscan.UptadeBlockNumber(handlers.BlockNumber)
+	blocnscan.UptadeBlockNumber(handlers.BlockNumber, handlers.InscriptionNumber)
 }
 
 func DumpTickerInfoMap(fname string,

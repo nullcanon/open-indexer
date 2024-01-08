@@ -19,6 +19,9 @@ type InscriptionInfo struct {
 	CreatedAt   uint64 `gorm:"column:created_at"`
 	CompletedAt uint64 `gorm:"column:completed_at"`
 	Number      uint64 `gorm:"column:number"`
+	Creater     string `gorm:"column:creater"`
+	Hash        string `gorm:"column:tx_hash"`
+	Precision   int    `gorm:"column:prec"`
 }
 
 func (u InscriptionInfo) CreateInscriptionInfo(inscriptionInfo InscriptionInfo) error {

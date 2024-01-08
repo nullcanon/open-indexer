@@ -11,8 +11,12 @@ import (
 	"open-indexer/model"
 	"open-indexer/plugin"
 	"open-indexer/rpc"
+	"open-indexer/server"
+	"open-indexer/service"
 	"open-indexer/structs"
 	"time"
+
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 // var (
@@ -30,18 +34,17 @@ import (
 func main() {
 
 	api := config.Global.Api
-	handlers.Ethrpc = rpc.NewEthRPC(api)
+	var logger = handlers.GetLogger()
+	handlers.Ethrpc = rpc.NewEthRPC(api, logger)
 
 	config.InitConfig()
 	db.Setup()
 	blockscan := db.BlockScan{}
-	blockNumber := uint64(blockscan.GetNumber()) + 1
-	// api := "https://aia-dataseed2.aiachain.org"
-	// api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d887b"
-	// api := "https://avalanche-mainnet.infura.io/v3/5146553d78104798833c74e20e2d8"
+	nblockNumber, number := blockscan.GetNumber()
+	blockNumber := uint64(nblockNumber) + 1
+	handlers.InscriptionNumber = uint64(number)
 	w := indexer.NewHttpBasedEthWatcher(context.Background(), api)
 
-	var logger = handlers.GetLogger()
 	loader.LoadDataBase()
 
 	logger.Info("start index ", blockNumber)
@@ -50,16 +53,43 @@ func main() {
 
 	ticker1 := time.NewTicker(30 * time.Second)
 	defer ticker1.Stop()
-
 	go func(t *time.Ticker) {
+		duration := 60 * time.Second
+		time.Sleep(duration)
 		for {
 			<-t.C
-			handlers.DBLock.Lock()
-			loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
-			loader.DumpBlockNumber()
-			handlers.DBLock.Unlock()
+			var pong model.PongMessage
+			pong.Pong = "pong"
+			server.SubHandler.Publish(server.Ping, &pong)
 		}
 	}(ticker1)
+
+	// go func(t *time.Ticker) {
+	// 	for {
+	// 		<-t.C
+	// 		handlers.DBLock.Lock()
+	// 		loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
+	// 		loader.DumpBlockNumber()
+	// 		handlers.DBLock.Unlock()
+	// 	}
+	// }(ticker1)
+
+	rpcAPI := []rpc.API{
+		{
+			Namespace: "tick",
+			Version:   "1.0",
+			Service:   service.NewTickService(),
+			Public:    true,
+		},
+	}
+
+	httpSrv := server.NewServer(rpcAPI, logger, server.HTTP)
+	httpSrv.Start()
+	defer httpSrv.Stop()
+
+	wsSrv := server.NewServer(rpcAPI, logger, server.WS)
+	wsSrv.Start()
+	defer wsSrv.Stop()
 
 	// we use BlockPlugin here
 	w.RegisterBlockPlugin(plugin.NewSimpleBlockPlugin(func(block *structs.RemovableBlock) {
@@ -86,30 +116,18 @@ func main() {
 
 				trxs = append(trxs, &data)
 			}
-			handlers.DBLock.Lock()
 			err := handlers.ProcessUpdateARC20(trxs)
 			if err != nil {
 				logger.Fatalf("process error, %s", err)
 			}
-			handlers.DBLock.Unlock()
+			loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
+			loader.DumpBlockNumber()
+			handlers.NotifyHistory()
 
 		}
 	}))
 
 	err := w.RunTillExitFromBlock(blockNumber)
 	logger.Errorln(err.Error())
-
-	// trxs, err := loader.LoadTransactionData(inputfile)
-	// if err != nil {
-	// 	logger.Fatalf("invalid input, %s", err)
-	// }
-
-	// err = handlers.ProcessUpdateARC20(trxs)
-	// if err != nil {
-	// 	logger.Fatalf("process error, %s", err)
-	// }
-
-	// print
-	// loader.DumpTickerInfoMap(outputfile, handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
 
 }

@@ -12,31 +12,31 @@ import (
 type BlockScan struct {
 	Id          int64 `gorm:"type:int(11) UNSIGNED AUTO_INCREMENT;primary_key" json:"id"`
 	BlockNumber int64 `gorm:"type:int(64) UNSIGNED not null COMMENT '同步的区块高度'" json:"block_number"`
+	Number      int64 `gorm:"type:int(64) UNSIGNED not null COMMENT '同步的区块高度对应的编号'" json:"number"`
 }
-
 
 func (b BlockScan) Create(blockScan BlockScan) error {
 	return db.Create(&blockScan).Error
 }
-func (b *BlockScan) GetNumber() int64 {
+func (b *BlockScan) GetNumber() (int64, int64) {
 	var bscScan BlockScan
 	err := db.Order("id desc").First(&bscScan).Error
 	if err != nil {
-		return 0
+		return 0, 0
 	}
-	return bscScan.BlockNumber
+	return bscScan.BlockNumber, bscScan.Number
 }
 
 func (b *BlockScan) Edit(data map[string]interface{}) error {
 	return db.Model(&b).Updates(data).Error
 }
 
-func (b *BlockScan) UptadeBlockNumber(blockNumber uint64) error {
+func (b *BlockScan) UptadeBlockNumber(blockNumber uint64, number uint64) error {
 	var blockscan BlockScan
 	result := db.First(&blockscan, "id = ?", 1)
 
 	if result.Error == nil {
-		db.Model(&BlockScan{}).Where("id = ?", 1).Update(map[string]interface{}{"block_number": blockNumber})
+		db.Model(&BlockScan{}).Where("id = ?", 1).Update(map[string]interface{}{"block_number": blockNumber, "number": number})
 	}
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {

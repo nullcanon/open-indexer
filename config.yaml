@@ -4,5 +4,10 @@ mysql:
   db: 'aias'
   password: 'aias.yyds'
   user: 'aias'
-api: '
+api: ''
 start_block: 25823050
+net:
+  http_host: "0.0.0.0"
+  http_port: 5656
+  ws_host: "0.0.0.0"
+  ws_port: 5757
