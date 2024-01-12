@@ -21,6 +21,10 @@ func New() *Decimal {
 	return &Decimal{value: new(big.Int).SetUint64(0)}
 }
 
+func NewFromValue(value *big.Int) *Decimal {
+	return &Decimal{value: value}
+}
+
 func NewCopy(other *Decimal) *Decimal {
 	return &Decimal{value: new(big.Int).Set(other.value)}
 }

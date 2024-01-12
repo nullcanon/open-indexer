@@ -1,17 +1,22 @@
 package handlers
 
 import (
+	"container/list"
+	"context"
 	"encoding/hex"
 	"encoding/json"
+	"math/big"
+	"open-indexer/db"
 	"open-indexer/model"
-	"open-indexer/plugin"
 	"open-indexer/rpc"
 	"open-indexer/server"
 	"open-indexer/utils"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
+	"github.com/apache/rocketmq-client-go/v2"
+	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -32,12 +37,14 @@ var BlockNumber uint64 = 0
 
 var InscriptionNumber uint64 = 0
 
-var DBLock sync.RWMutex
-
 var Ethrpc *rpc.EthBlockChainRPC
 
 // var TradeCache = make(chan *db.TradeHistory, 512)
 var TradeCache []*model.HistoryMessage
+
+var ReockP rocketmq.Producer
+
+var RocketQueue *list.List
 
 func ProcessUpdateARC20(trxs []*model.Transaction) error {
 	for _, inscription := range trxs {
@@ -55,6 +62,35 @@ func notifyNewTick(asc20 *model.Asc20) {
 	tickMsg.Max = asc20.Max.String()
 	tickMsg.Tick = asc20.Tick
 	server.SubHandler.Publish(server.NewTick, &tickMsg)
+}
+
+func PushRockMQ() {
+	for RocketQueue.Len() > 0 {
+		element := RocketQueue.Front()
+
+		message := element.Value.(string)
+		logger.Infof("Rocket message: %s\n", message)
+		_, err := ReockP.SendSync(context.Background(), primitive.NewMessage("new_list", []byte(message)))
+		if err != nil {
+			var parsedData map[string]interface{}
+			errj := json.Unmarshal([]byte(message), &parsedData)
+			if errj != nil {
+				logger.Error("PushRockMQ JSON error:", errj)
+			} else {
+				if hashValue, ok := parsedData["id"].(string); ok {
+					rocketmsg := db.RocketMsg{}
+					rocketmsg.Hash = hashValue
+					rocketmsg.Message = message
+					err = rocketmsg.CreateRocketMsg(rocketmsg)
+					logger.Error("rocketmsg.CreateRocketMsg:", errj)
+				}
+			}
+
+		} else {
+			logger.Infof("Rocket seccess: %s\n", message)
+		}
+		RocketQueue.Remove(element)
+	}
 }
 
 func NotifyHistory() {
@@ -86,24 +122,13 @@ func Inscribe(trx *model.Transaction) error {
 	hasFix := strings.HasPrefix(trx.Input, "0x646174613a")
 
 	// data:,
-	if hasFix || trx.To == "0x418A611e32312d6bd6BBEAAbC583dF57143F4F42" {
-
+	// contract address
+	if hasFix || trx.To == strings.ToLower("0x368323Fd8b8BaaEC1615E9A78Dac27779F123f0A") {
 		bytes, err := hex.DecodeString(trx.Input[2:])
 		if err != nil {
 			logger.Warn("inscribe err", err, " at block ", trx.Block, ":", trx.Idx)
 			return nil
 		}
-		input := string(bytes)
-
-		sepIdx := strings.Index(input, ",")
-		if sepIdx == -1 || sepIdx == len(input)-1 {
-			return nil
-		}
-		contentType := "text/plain"
-		if sepIdx > 5 {
-			contentType = input[5:sepIdx]
-		}
-		content := input[sepIdx+1:]
 
 		InscriptionNumber++
 		var inscription model.Inscription
@@ -114,19 +139,34 @@ func Inscribe(trx *model.Transaction) error {
 		inscription.Block = trx.Block
 		inscription.Idx = trx.Idx
 		inscription.Timestamp = trx.Timestamp
-		inscription.ContentType = contentType
-		inscription.Content = content
+
 		BlockNumber = trx.Block
 
 		if !hasFix {
 			// 获取交易log
+			logger.Info("evm log To: ", trx.To)
 			if err := handleEvmLog(&inscription); err != nil {
 				logger.Info("error at ", inscription.Number)
 
 				return err
+
 			}
 			return nil
 		} else {
+
+			input := string(bytes)
+
+			sepIdx := strings.Index(input, ",")
+			if sepIdx == -1 || sepIdx == len(input)-1 {
+				return nil
+			}
+			contentType := "text/plain"
+			if sepIdx > 5 {
+				contentType = input[5:sepIdx]
+			}
+			content := input[sepIdx+1:]
+			inscription.ContentType = contentType
+			inscription.Content = content
 			if err := handleProtocols(&inscription); err != nil {
 				logger.Info("error at ", inscription.Number)
 
@@ -146,18 +186,33 @@ func handleEvmLog(inscription *model.Inscription) error {
 		for _, subLog := range subLogs {
 			subTopics := subLog.GetTopics()
 			if subTopics[0] != "0x11c57dfe5e3d216d9107fdc9e7cca2cf14a175fd4de91d06c28a1ff238dbedce" {
-				return nil
+				continue
 			}
-			subFrom := common.HexToAddress(subTopics[1]).String()
-			subTo := common.HexToAddress(subTopics[2]).String()
-			usdtWeiamount, _ := plugin.HexToDecimal(subLog.GetData())
-			tick := subLog.GetData()
+			subFrom := strings.ToLower(common.HexToAddress(subTopics[1]).String())
+			subTo := strings.ToLower(common.HexToAddress(subTopics[2]).String())
+			amt_str := subLog.GetData()[2:66]
+			b := new(big.Int)
+			b, ok := b.SetString(amt_str, 16)
+			if !ok {
+				continue
+			}
+			amt := model.NewDecimalFromStringValue(b.String())
+			tick_srt := subLog.GetData()[194:]
+
+			hexBytes, err := hex.DecodeString(tick_srt)
+			hexBytes = utils.TrimLeftZeroes(hexBytes)
+			hexBytes = utils.TrimRightZeroes(hexBytes)
+			if err != nil {
+				continue
+			}
+			tick := string(hexBytes)
 			var asc20 model.Asc20
 			asc20.Number = inscription.Number
 			asc20.Tick = tick
 			asc20.Operation = "transfer"
+			logger.Infoln("From:", subFrom, " To:", subTo, amt, " tick:", tick)
 			// TODO 地址大小写区分是否一样
-			transferTokenContract(&asc20, subFrom, subTo, usdtWeiamount)
+			transferTokenContract(&asc20, subFrom, subTo, amt)
 		}
 	}
 	return nil
@@ -540,10 +595,15 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 	}
 
 	// go appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
-	// TODO 发通知
-	// if inscription.To ==  "contract address" {
-	// 	//
-	// }
+	// contract address
+	if inscription.To == strings.ToLower("0x368323Fd8b8BaaEC1615E9A78Dac27779F123f0A") {
+		RocketQueue.PushBack("{ \"id\":\"" + inscription.Id +
+			"\", \"tick\":\"" + tick +
+			"\", \"address\":\"" + inscription.From +
+			"\",\"amount\":" + amt.String() +
+			",\"number\":" + strconv.FormatUint(inscription.Number, 10) +
+			"}")
+	}
 	appendTradeCache(inscription, asc20.Tick, asc20.Amount.String())
 
 	return 1, err

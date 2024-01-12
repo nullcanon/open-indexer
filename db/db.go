@@ -51,6 +51,7 @@ func Setup() {
 		BlockScan{},
 		InscriptionInfo{},
 		TradeHistory{},
+		RocketMsg{},
 	)
 	//CreateTableByHash()
 }

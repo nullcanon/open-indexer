@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"open-indexer/blockchain"
-	"open-indexer/handlers"
 	"open-indexer/plugin"
 	"open-indexer/rpc"
 	"open-indexer/structs"
@@ -43,8 +42,8 @@ type AbstractWatcher struct {
 	logger                  *logrus.Logger
 }
 
-func NewHttpBasedEthWatcher(ctx context.Context, api string) *AbstractWatcher {
-	rpc := rpc.NewEthRPCWithRetry(api, 5)
+func NewHttpBasedEthWatcher(ctx context.Context, api string, logger *logrus.Logger) *AbstractWatcher {
+	rpc := rpc.NewEthRPCWithRetry(api, 5, logger)
 
 	return &AbstractWatcher{
 		Ctx:                     ctx,
@@ -57,7 +56,7 @@ func NewHttpBasedEthWatcher(ctx context.Context, api string) *AbstractWatcher {
 		MaxSyncedBlockToKeep:    64,
 		sleepSecondsForNewBlock: 3,
 		wg:                      sync.WaitGroup{},
-		logger:                  handlers.GetLogger(),
+		logger:                  logger,
 	}
 }
 

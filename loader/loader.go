@@ -2,6 +2,7 @@ package loader
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log"
 	"open-indexer/db"
@@ -12,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/apache/rocketmq-client-go/v2/primitive"
 )
 
 // func DumpTradeCache() {
@@ -80,7 +83,22 @@ func LoadDataBase() {
 		handlers.TokenHolders[users.Ticks] = holderB
 	}
 	handlers.GetLogger().Info("UserBalances load succees")
+}
 
+func LoadAndPushRocketMsg() {
+	var rocketMsg []db.RocketMsg
+	rocketmsg := db.RocketMsg{}
+	rocketmsg.FetchRocketMsg(&rocketMsg)
+	for _, msgs := range rocketMsg {
+		handlers.GetLogger().Infof("Rocket message from DB: %s\n", msgs.Message)
+		_, err := handlers.ReockP.SendSync(context.Background(), primitive.NewMessage("new_list", []byte(msgs.Message)))
+		if err != nil {
+			handlers.GetLogger().Infof("Rocket faild  from DB: %s\n", err)
+		} else {
+			rocketmsg.DelMsg(msgs)
+			handlers.GetLogger().Infof("Rocket seccess  from DB: %s\n", msgs.Message)
+		}
+	}
 }
 
 func LoadTransactionData(fname string) ([]*model.Transaction, error) {

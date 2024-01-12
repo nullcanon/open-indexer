@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql/driver"
+	"math/big"
 	"open-indexer/utils/decimal"
 )
 
@@ -13,18 +14,31 @@ func NewDecimal() *DDecimal {
 	return &DDecimal{decimal.New()}
 }
 
+func NewDecimalFromHexString(hex string) (*DDecimal, bool) {
+	if hex[0:2] == "0x" || hex[0:2] == "0X" {
+		hex = hex[2:]
+	}
+
+	b := new(big.Int)
+	b, ok := b.SetString(hex, 16)
+	if !ok {
+		return &DDecimal{decimal.New()}, false
+	}
+
+	return &DDecimal{decimal.NewFromValue(b)}, true
+}
+
 func NewDecimalFromString(s string) (*DDecimal, int, error) {
 	d, p, e := decimal.NewFromString(s)
 
 	return &DDecimal{d}, p, e
 }
 
-func NewDecimalFromStringValue(s string) (*DDecimal) {
+func NewDecimalFromStringValue(s string) *DDecimal {
 	d, _, _ := decimal.NewFromString(s)
 
 	return &DDecimal{d}
 }
-
 
 func (dd *DDecimal) Add(other *DDecimal) *DDecimal {
 	d := dd.value.Add(other.value)
