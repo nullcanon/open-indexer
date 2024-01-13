@@ -80,6 +80,7 @@ func (s *TickService) Sign(creater string, buyer string, amount string, price st
 	}
 
 	hash := solsha3.SoliditySHA3(types, values)
+	fmt.Println(hex.EncodeToString(hash))
 
 	types = []string{"string", "bytes32"}
 	values = []interface{}{

@@ -44,7 +44,7 @@ func LoadDataBase() {
 	ins.FetchInscriptionInfo(&insInfos)
 
 	for _, tokens := range insInfos {
-		handlers.Tokens[tokens.Ticks] = &model.Token{
+		handlers.Tokens[strings.ToLower(tokens.Ticks)] = &model.Token{
 			Trxs:        tokens.Trxs,
 			Tick:        tokens.Ticks,
 			Minted:      model.NewDecimalFromStringValue(tokens.Minted),
@@ -57,7 +57,7 @@ func LoadDataBase() {
 			Creater:     tokens.Creater,
 			Hash:        tokens.Hash,
 		}
-		handlers.TokenHolders[tokens.Ticks] = make(map[string]*model.DDecimal)
+		handlers.TokenHolders[strings.ToLower(tokens.Ticks)] = make(map[string]*model.DDecimal)
 		// handlers.GetLogger().Info(tokens.Ticks, tokens.Trxs, tokens.Minted, tokens.Holders, tokens.Total)
 	}
 
@@ -72,15 +72,15 @@ func LoadDataBase() {
 		if userBalances == nil {
 			userBalances = make(map[string]*model.DDecimal)
 		}
-		userBalances[users.Ticks] = amt
+		userBalances[strings.ToLower(users.Ticks)] = amt
 		handlers.UserBalances[users.Address] = userBalances
 
-		holderB := handlers.TokenHolders[users.Ticks]
+		holderB := handlers.TokenHolders[strings.ToLower(users.Ticks)]
 		if holderB == nil {
 			holderB = make(map[string]*model.DDecimal)
 		}
 		holderB[users.Address] = amt
-		handlers.TokenHolders[users.Ticks] = holderB
+		handlers.TokenHolders[strings.ToLower(users.Ticks)] = holderB
 	}
 	handlers.GetLogger().Info("UserBalances load succees")
 }

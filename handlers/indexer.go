@@ -598,7 +598,7 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 	// contract address
 	if inscription.To == strings.ToLower("0x368323Fd8b8BaaEC1615E9A78Dac27779F123f0A") {
 		RocketQueue.PushBack("{ \"id\":\"" + inscription.Id +
-			"\", \"tick\":\"" + tick +
+			"\", \"tick\":\"" + asc20.Tick +
 			"\", \"address\":\"" + inscription.From +
 			"\",\"amount\":" + amt.String() +
 			",\"number\":" + strconv.FormatUint(inscription.Number, 10) +
