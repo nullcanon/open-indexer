@@ -561,6 +561,14 @@ func transferToken(asc20 *model.Asc20, inscription *model.Inscription, params ma
 	}
 
 	if amt.Cmp(fromBalance) == 1 {
+		if inscription.To == strings.ToLower("0x368323Fd8b8BaaEC1615E9A78Dac27779F123f0A") {
+			RocketQueue.PushBack("{ \"id\":\"" + inscription.Id +
+				"\", \"tick\":\"" + asc20.Tick +
+				"\", \"address\":\"" + inscription.From +
+				"\",\"amount\":" + amt.String() +
+				",\"number\":" + "0" +
+				"}")
+		}
 		return -37, nil
 	}
 
