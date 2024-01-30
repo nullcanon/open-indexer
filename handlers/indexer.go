@@ -120,6 +120,7 @@ func appendTradeCache(inscription *model.Inscription, tick string, amount string
 func Inscribe(trx *model.Transaction) error {
 
 	hasFix := strings.HasPrefix(trx.Input, "0x646174613a")
+	BlockNumber = trx.Block
 
 	// data:,
 	// contract address
@@ -139,8 +140,6 @@ func Inscribe(trx *model.Transaction) error {
 		inscription.Block = trx.Block
 		inscription.Idx = trx.Idx
 		inscription.Timestamp = trx.Timestamp
-
-		BlockNumber = trx.Block
 
 		if !hasFix {
 			// 获取交易log

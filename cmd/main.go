@@ -49,6 +49,7 @@ func main() {
 	blockNumber := uint64(nblockNumber) + 1
 	handlers.InscriptionNumber = uint64(number)
 	w := indexer.NewHttpBasedEthWatcher(context.Background(), api, logger)
+	var lasetUpdateBlock = uint64(0)
 
 	loader.LoadDataBase()
 
@@ -146,9 +147,11 @@ func main() {
 				logger.Fatalf("process error, %s", err)
 			}
 			handlers.PushRockMQ()
-			loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
-			loader.DumpBlockNumber()
 			handlers.NotifyHistory()
+			if lasetUpdateBlock == 0 || lasetUpdateBlock+6 == handlers.BlockNumber {
+				loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
+				loader.DumpBlockNumber()
+			}
 
 		}
 	}))
