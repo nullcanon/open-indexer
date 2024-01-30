@@ -54,7 +54,6 @@ func main() {
 
 	logger.Info("start index ", blockNumber)
 
-	var lastDumpBlock = uint64(0)
 	// go loader.DumpTradeCache()
 
 	ticker1 := time.NewTicker(30 * time.Second)
@@ -147,12 +146,9 @@ func main() {
 				logger.Fatalf("process error, %s", err)
 			}
 			handlers.PushRockMQ()
+			loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
+			loader.DumpBlockNumber()
 			handlers.NotifyHistory()
-			if lastDumpBlock == 0 || lastDumpBlock+6 == handlers.BlockNumber {
-				loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
-				loader.DumpBlockNumber()
-				lastDumpBlock = handlers.BlockNumber
-			}
 
 		}
 	}))
