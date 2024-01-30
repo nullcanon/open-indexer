@@ -156,7 +156,7 @@ func (watcher *AbstractWatcher) RunTillExitFromBlock(startBlockNum uint64) error
 		latestBlockNum, err := watcher.rpc.GetCurrentBlockNum()
 
 		// 延迟6个块
-		latestBlockNum = latestBlockNum - 6
+		latestBlockNum = latestBlockNum - 1
 		if err != nil {
 			return err
 		}
