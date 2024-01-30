@@ -151,6 +151,7 @@ func main() {
 			if lasetUpdateBlock == 0 || lasetUpdateBlock+6 == handlers.BlockNumber {
 				loader.DumpTickerInfoToDB(handlers.Tokens, handlers.UserBalances, handlers.TokenHolders)
 				loader.DumpBlockNumber()
+				lasetUpdateBlock = handlers.BlockNumber
 			}
 
 		}
